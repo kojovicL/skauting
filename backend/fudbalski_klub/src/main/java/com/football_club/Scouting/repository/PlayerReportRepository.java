@@ -1,6 +1,6 @@
 package com.football_club.Scouting.repository;
 
-import com.football_club.MatchTracking.model.Player;
+import com.football_club.Scouting.model.Player;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -1,8 +1,6 @@
 package com.football_club.Scouting.model;
 
 import com.football_club.Auth.model.User;
-import com.football_club.MatchTracking.model.Club;
-import com.football_club.MatchTracking.model.Player;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,8 +37,12 @@ public class Report {
     private String overallCommentary;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "club_at_time_id")
-    private Club clubAtTime;
+    @JoinColumn(name = "team_at_time_id")
+    private Team teamAtTime;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "match_id")
+    private Match match;
 
     @Column(name = "league_multiplier_at_time", nullable = false)
     private double leagueMultiplierAtTime;

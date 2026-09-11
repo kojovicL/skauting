@@ -10,6 +10,6 @@ import lombok.*;
 public class ReportSaveDTO {
     private Long playerId;
     private String overallCommentary;
-    private Integer clubAtTimeId;
+    private Long teamAtTimeId;
     private double leagueMultiplierAtTime;
 }

@@ -11,5 +11,5 @@ public interface ILeagueService {
     List<LeagueDTO> getAllLeagues();
     LeagueDTO updateLeague(Long id, LeagueSaveDTO dto);
     void deleteLeague(Long id);
-    void addClubToLeague(Long leagueId, Integer clubId);
+    void addTeamToLeague(Long leagueId, Long teamId);
 }

@@ -55,8 +55,8 @@ public class LeagueController {
 
     @PostMapping("/{leagueId}/clubs/{clubId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> addClubToLeague(@PathVariable Long leagueId, @PathVariable Integer clubId) {
-        leagueService.addClubToLeague(leagueId, clubId);
+    public ResponseEntity<Void> addClubToLeague(@PathVariable Long leagueId, @PathVariable Long teamId) {
+        leagueService.addTeamToLeague(leagueId, teamId);
         return ResponseEntity.ok().build();
     }
 }

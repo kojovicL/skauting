@@ -1,7 +1,7 @@
 package com.football_club.Scouting.model;
 
 import com.football_club.Auth.model.User;
-import com.football_club.MatchTracking.model.Player;
+import com.football_club.Scouting.model.Player;
 import com.football_club.Scouting.model.enums.RequestStatus;
 import jakarta.persistence.*;
 import lombok.*;

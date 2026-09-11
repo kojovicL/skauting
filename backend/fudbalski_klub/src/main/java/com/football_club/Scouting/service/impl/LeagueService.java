@@ -8,8 +8,8 @@ import com.football_club.Scouting.service.ILeagueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.football_club.MatchTracking.model.Club;
-import com.football_club.MatchTracking.repository.jpa.ClubRepository;
+import com.football_club.Scouting.model.Team;
+import com.football_club.Scouting.repository.TeamRepository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class LeagueService implements ILeagueService {
 
     private final LeagueRepository leagueRepository;
-    private final ClubRepository clubRepository; // Inject ClubRepository to fetch the Club
+    private final TeamRepository teamRepository;
 
     @Override
     @Transactional
@@ -73,14 +73,14 @@ public class LeagueService implements ILeagueService {
 
     @Override
     @Transactional
-    public void addClubToLeague(Long leagueId, Integer clubId) {
+    public void addTeamToLeague(Long leagueId, Long teamId) {
         League league = leagueRepository.findById(leagueId)
                 .orElseThrow(() -> new NoSuchElementException("Liga sa ID-em " + leagueId + " ne postoji."));
 
-        Club club = clubRepository.findById(clubId)
-                .orElseThrow(() -> new NoSuchElementException("Klub sa ID-em " + clubId + " ne postoji."));
+        Team team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new NoSuchElementException("Klub sa ID-em " + teamId + " ne postoji."));
 
-        league.addClub(club);
+        league.addTeam(team);
         
         leagueRepository.save(league);
     }

@@ -1,6 +1,6 @@
 package com.football_club.Scouting.dto;
 
-import com.football_club.MatchTracking.model.enums.PlayerPosition;
+import com.football_club.Scouting.model.enums.Position;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RecommendationRequestDTO {
-    private PlayerPosition position;
+    private Position position;
     private List<WeightedMetrics> metricWeights;
 
     @Getter

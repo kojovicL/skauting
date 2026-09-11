@@ -1,7 +1,7 @@
 package com.football_club.Scouting.repository;
 
-import com.football_club.MatchTracking.model.enums.PlayerPosition;
 import com.football_club.Scouting.model.MetricContext;
+import com.football_club.Scouting.model.enums.Position;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,7 +13,7 @@ import java.util.Set;
 
 @Repository
 public interface MetricContextRepository extends JpaRepository<MetricContext, Long> {
-    List<MetricContext> findByPositionAndMetricIdIn(PlayerPosition position, Set<Long> metricIds);
+    List<MetricContext> findByPositionAndMetricIdIn(Position position, Set<Long> metricIds);
     @Modifying
     @Transactional
     @Query(nativeQuery = true, value =

@@ -1,6 +1,6 @@
 package com.football_club.Scouting.service.impl;
 
-import com.football_club.MatchTracking.model.enums.PlayerPosition;
+import com.football_club.Scouting.model.enums.Position;
 import com.football_club.Scouting.dto.PlayerRecommendationDTO;
 import com.football_club.Scouting.model.MetricContext;
 import com.football_club.Scouting.model.Report;
@@ -22,7 +22,7 @@ public class RecommendationService implements IRecommendationService {
     private final ReportRepository reportRepository;
     private final GameMetricRepository gameMetricRepository;
 
-    public List<PlayerRecommendationDTO> getRecommendations(PlayerPosition position, Map<Long, Double> metricWeights) {
+    public List<PlayerRecommendationDTO> getRecommendations(Position position, Map<Long, Double> metricWeights) {
         if (metricWeights.isEmpty()) { return Collections.emptyList(); }
 
         Set<Long> selectedMetricIds = metricWeights.keySet();

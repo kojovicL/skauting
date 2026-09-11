@@ -1,6 +1,5 @@
 package com.football_club.Scouting.model;
 
-import com.football_club.MatchTracking.model.Club;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class League {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,15 +27,15 @@ public class League {
     private double difficultyMultiplier;
 
     @OneToMany(mappedBy = "league", cascade = CascadeType.ALL)
-    private List<Club> clubs;
+    private List<Team> teams;
 
-    public void addClub(Club club) {
-        this.clubs.add(club);
-        club.setLeague(this);
+    public void addTeam(Team team) {
+        this.teams.add(team);
+        team.setLeague(this);
     }
 
-    public void removeClub(Club club) {
-        this.clubs.remove(club);
-        club.setLeague(null);
+    public void removeTeam(Team team) {
+        this.teams.remove(team);
+        team.setLeague(null);
     }
 }

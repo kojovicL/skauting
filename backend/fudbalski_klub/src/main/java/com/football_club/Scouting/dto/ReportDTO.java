@@ -19,8 +19,8 @@ public class ReportDTO {
     private String scoutUsername;
     private LocalDateTime createdAt;
     private String overallCommentary;
-    private Integer clubAtTimeId;
-    private String clubAtTimeName;
+    private Long teamAtTimeId;
+    private String teamAtTimeName;
     private double leagueMultiplierAtTime;
     private List<ValuedMetricDTO> valuedMetrics;
 }

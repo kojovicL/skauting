@@ -2,10 +2,10 @@ package com.football_club.Scouting.service.impl;
 
 import com.football_club.Auth.model.User;
 import com.football_club.Auth.repository.UserRepository;
-import com.football_club.MatchTracking.model.Club;
-import com.football_club.MatchTracking.model.Player;
-import com.football_club.MatchTracking.repository.jpa.ClubRepository;
-import com.football_club.MatchTracking.repository.jpa.PlayerRepository;
+import com.football_club.Scouting.model.Team;
+import com.football_club.Scouting.model.Player;
+import com.football_club.Scouting.repository.TeamRepository;
+import com.football_club.Scouting.repository.PlayerRepository;
 import com.football_club.Scouting.dto.ReportDTO;
 import com.football_club.Scouting.dto.ReportSaveDTO;
 import com.football_club.Scouting.dto.ValuedMetricDTO;
@@ -31,7 +31,7 @@ public class ReportService implements IReportService {
     private final ReportRepository reportRepository;
     private final PlayerRepository playerRepository;
     private final UserRepository userRepository;
-    private final ClubRepository clubRepository;
+    private final TeamRepository teamRepository;
     private final ScoutRequestRepository scoutRequestRepository;
 
     @Override
@@ -43,10 +43,10 @@ public class ReportService implements IReportService {
         User scout = userRepository.findById(scoutId)
                 .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen sa ID-em: " + scoutId));
 
-        Club club = null;
-        if (dto.getClubAtTimeId() != null) {
-            club = clubRepository.findById(dto.getClubAtTimeId())
-                    .orElseThrow(() -> new NoSuchElementException("Klub nije pronađen sa ID-em: " + dto.getClubAtTimeId()));
+        Team team = null;
+        if (dto.getTeamAtTimeId() != null) {
+            team = teamRepository.findById(dto.getTeamAtTimeId())
+                    .orElseThrow(() -> new NoSuchElementException("Klub nije pronađen sa ID-em: " + dto.getTeamAtTimeId()));
         }
 
         scoutRequestRepository.findByScoutIdAndPlayerIdAndStatusIn(
@@ -59,14 +59,14 @@ public class ReportService implements IReportService {
         });
 
         double multiplier = 1.0;
-        if (club != null && club.getLeague() != null) {
-            multiplier = club.getLeague().getDifficultyMultiplier();
+        if (team != null && team.getLeague() != null) {
+            multiplier = team.getLeague().getDifficultyMultiplier();
         }
 
         Report report = new Report();
         report.setPlayer(player);
         report.setScout(scout);
-        report.setClubAtTime(club);
+        report.setTeamAtTime(team);
         report.setCreatedAt(LocalDateTime.now());
         report.setOverallCommentary(dto.getOverallCommentary());
         report.setLeagueMultiplierAtTime(multiplier);
@@ -103,15 +103,15 @@ public class ReportService implements IReportService {
         User scout = userRepository.findById(scoutId)
                 .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen sa ID-em: " + scoutId));
 
-        Club club = null;
-        if (dto.getClubAtTimeId() != null) {
-            club = clubRepository.findById(dto.getClubAtTimeId())
-                    .orElseThrow(() -> new NoSuchElementException("Klub nije pronađen sa ID-em: " + dto.getClubAtTimeId()));
+        Team team = null;
+        if (dto.getTeamAtTimeId() != null) {
+            team = teamRepository.findById(dto.getTeamAtTimeId())
+                    .orElseThrow(() -> new NoSuchElementException("Klub nije pronađen sa ID-em: " + dto.getTeamAtTimeId()));
         }
 
         report.setPlayer(player);
         report.setScout(scout);
-        report.setClubAtTime(club);
+        report.setTeamAtTime(team);
         report.setOverallCommentary(dto.getOverallCommentary());
         report.setLeagueMultiplierAtTime(dto.getLeagueMultiplierAtTime());
 
@@ -171,8 +171,8 @@ public class ReportService implements IReportService {
                 .scoutUsername(report.getScout().getUsername())
                 .createdAt(report.getCreatedAt())
                 .overallCommentary(report.getOverallCommentary())
-                .clubAtTimeId(report.getClubAtTime() != null ? report.getClubAtTime().getId() : null)
-                .clubAtTimeName(report.getClubAtTime() != null ? report.getClubAtTime().getName() : null)
+                .teamAtTimeId(report.getTeamAtTime() != null ? report.getTeamAtTime().getId() : null)
+                .teamAtTimeName(report.getTeamAtTime() != null ? report.getTeamAtTime().getName() : null)
                 .leagueMultiplierAtTime(report.getLeagueMultiplierAtTime())
                 .valuedMetrics(metrics)
                 .build();

@@ -2,6 +2,7 @@ package com.football_club.Scouting.model;
 
 import com.football_club.MatchTracking.model.enums.PlayerPosition;
 import com.football_club.Scouting.model.enums.MetricType;
+import com.football_club.Scouting.model.enums.Position;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,7 +26,7 @@ public class MetricContext {
 
     @Column(name = "position", nullable = false)
     @Enumerated(EnumType.STRING)
-    private PlayerPosition position;
+    private Position position;
 
     @Column(name = "metric_id", nullable = false)
     private Long metricId;
