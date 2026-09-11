@@ -1,0 +1,12 @@
+package com.football_club.Scouting.service;
+
+import com.football_club.Scouting.model.Player;
+import java.util.List;
+
+public interface IPlayerService {
+    Player createPlayer(Player player);
+    Player getPlayerById(Long id);
+    List<Player> getAllPlayers();
+    Player updatePlayer(Long id, Player player);
+    void deletePlayer(Long id);
+}
