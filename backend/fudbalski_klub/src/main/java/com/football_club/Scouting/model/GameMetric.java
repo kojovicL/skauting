@@ -1,7 +1,7 @@
 package com.football_club.Scouting.model;
 
-import com.football_club.MatchTracking.model.Game;
-import com.football_club.MatchTracking.model.Player;
+import com.football_club.Scouting.model.Match;
+import com.football_club.Scouting.model.Player;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,8 +22,8 @@ public class GameMetric {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "game_id", nullable = false)
-    private Game game;
+    @JoinColumn(name = "match_id", nullable = false)
+    private Match match;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)

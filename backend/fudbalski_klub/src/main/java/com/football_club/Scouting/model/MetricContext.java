@@ -1,6 +1,5 @@
 package com.football_club.Scouting.model;
 
-import com.football_club.MatchTracking.model.enums.PlayerPosition;
 import com.football_club.Scouting.model.enums.MetricType;
 import com.football_club.Scouting.model.enums.Position;
 import jakarta.persistence.*;

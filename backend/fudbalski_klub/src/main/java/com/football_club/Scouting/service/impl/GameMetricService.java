@@ -1,9 +1,9 @@
 package com.football_club.Scouting.service.impl;
 
-import com.football_club.MatchTracking.model.Game;
-import com.football_club.MatchTracking.model.Player;
-import com.football_club.MatchTracking.repository.jpa.GameRepository;
-import com.football_club.MatchTracking.repository.jpa.PlayerRepository;
+import com.football_club.Scouting.model.Match;
+import com.football_club.Scouting.model.Player;
+import com.football_club.Scouting.repository.MatchRepository;
+import com.football_club.Scouting.repository.PlayerRepository;
 import com.football_club.Scouting.dto.GameMetricDTO;
 import com.football_club.Scouting.dto.GameMetricSaveDTO;
 import com.football_club.Scouting.model.GameMetric;
@@ -26,19 +26,19 @@ import java.util.stream.Collectors;
 public class GameMetricService implements IGameMetricService {
 
     private final GameMetricRepository gameMetricRepository;
-    private final GameRepository gameRepository;
+    private final MatchRepository matchRepository;
     private final PlayerRepository playerRepository;
     private final MetricRepository metricRepository;
 
     @Override
     @Transactional
     public GameMetricDTO createGameMetric(GameMetricSaveDTO dto) {
-        if (gameMetricRepository.existsByGameIdAndPlayerIdAndMetricId(dto.getGameId(), dto.getPlayerId(), dto.getMetricId())) {
+        if (gameMetricRepository.existsByMatchIdAndPlayerIdAndMetricId(dto.getMatchId(), dto.getPlayerId(), dto.getMetricId())) {
             throw new IllegalArgumentException("Ova metrika utakmice već postoji za dati meč i igrača!");
         }
 
-        Game game = gameRepository.findById(dto.getGameId())
-                .orElseThrow(() -> new NoSuchElementException("Utakmica sa ID-em " + dto.getGameId() + " nije pronađena."));
+        Match match = matchRepository.findById(dto.getMatchId())
+                .orElseThrow(() -> new NoSuchElementException("Utakmica sa ID-em " + dto.getMatchId() + " nije pronađena."));
 
         Player player = playerRepository.findById(dto.getPlayerId())
                 .orElseThrow(() -> new NoSuchElementException("Igrač sa ID-em " + dto.getPlayerId() + " nije pronađen."));
@@ -47,7 +47,7 @@ public class GameMetricService implements IGameMetricService {
                 .orElseThrow(() -> new NoSuchElementException("Metrika sa ID-em " + dto.getMetricId() + " nije pronađena."));
 
         GameMetric gameMetric = new GameMetric();
-        gameMetric.setGame(game);
+        gameMetric.setMatch(match);
         gameMetric.setPlayer(player);
         gameMetric.setMetric(metric);
         gameMetric.setRecordedValue(dto.getRecordedValue());
@@ -61,7 +61,7 @@ public class GameMetricService implements IGameMetricService {
     public List<GameMetricDTO> createGameMetrics(List<GameMetricSaveDTO> dtos) {
         List<GameMetricDTO> result = new ArrayList<>();
         for (GameMetricSaveDTO dto : dtos) {
-            gameMetricRepository.findByGameIdAndPlayerIdAndMetricId(dto.getGameId(), dto.getPlayerId(), dto.getMetricId())
+            gameMetricRepository.findByMatchIdAndPlayerIdAndMetricId(dto.getMatchId(), dto.getPlayerId(), dto.getMetricId())
                     .ifPresentOrElse(
                             existing -> {
                                 existing.setRecordedValue(dto.getRecordedValue());
@@ -95,7 +95,7 @@ public class GameMetricService implements IGameMetricService {
         GameMetric gameMetric = gameMetricRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Metrika utakmice nije pronađena."));
 
-        Game game = gameRepository.findById(dto.getGameId())
+        Match match = matchRepository.findById(dto.getMatchId())
                 .orElseThrow(() -> new NoSuchElementException("Utakmica nije pronađena."));
 
         Player player = playerRepository.findById(dto.getPlayerId())
@@ -104,7 +104,7 @@ public class GameMetricService implements IGameMetricService {
         Metric metric = metricRepository.findById(dto.getMetricId())
                 .orElseThrow(() -> new NoSuchElementException("Metrika nije pronađena."));
 
-        gameMetric.setGame(game);
+        gameMetric.setMatch(match);
         gameMetric.setPlayer(player);
         gameMetric.setMetric(metric);
         gameMetric.setRecordedValue(dto.getRecordedValue());
@@ -123,8 +123,8 @@ public class GameMetricService implements IGameMetricService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GameMetricDTO> getMetricsByGame(Long gameId) {
-        return gameMetricRepository.findByGameId(gameId).stream()
+    public List<GameMetricDTO> getMetricsByGame(Long matchId) {
+        return gameMetricRepository.findByMatchId(matchId).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
@@ -139,8 +139,8 @@ public class GameMetricService implements IGameMetricService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<GameMetricDTO> getMetricsByGameAndPlayer(Long gameId, Long playerId) {
-        return gameMetricRepository.findByGameIdAndPlayerId(gameId, playerId).stream()
+    public List<GameMetricDTO> getMetricsByGameAndPlayer(Long matchId, Long playerId) {
+        return gameMetricRepository.findByMatchIdAndPlayerId(matchId, playerId).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
@@ -156,11 +156,11 @@ public class GameMetricService implements IGameMetricService {
     private GameMetricDTO mapToDTO(GameMetric metric) {
         return GameMetricDTO.builder()
                 .id(metric.getId())
-                .gameId(metric.getGame().getId())
-                .matchDate(metric.getGame().getMatchDate())
+                .matchId(metric.getMatch().getId())
+                .matchDate(metric.getMatch().getMatchDate())
                 .playerId(metric.getPlayer().getId())
-                .homeClubName(metric.getGame().getHomeClub().getName())
-                .awayClubName(metric.getGame().getAwayClub().getName())
+                .homeClubName(metric.getMatch().getHomeTeam().getName())
+                .awayClubName(metric.getMatch().getAwayTeam().getName())
                 .metricId(metric.getMetric().getId())
                 .metricName(metric.getMetric().getName())
                 .recordedValue(metric.getRecordedValue())

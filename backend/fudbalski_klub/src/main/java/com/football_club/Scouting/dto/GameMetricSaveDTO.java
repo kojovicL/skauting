@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class GameMetricSaveDTO {
-    private Long gameId;
+    private Long matchId;
     private Long playerId;
     private Long metricId;
     private double recordedValue;

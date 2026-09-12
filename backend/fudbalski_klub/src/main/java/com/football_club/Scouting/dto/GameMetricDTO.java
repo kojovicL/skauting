@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 public class GameMetricDTO {
     private Long id;
-    private Long gameId;
+    private Long matchId;
     private String homeClubName;
     private String awayClubName;
     private LocalDateTime matchDate;
