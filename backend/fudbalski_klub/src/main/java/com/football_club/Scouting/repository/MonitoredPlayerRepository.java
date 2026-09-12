@@ -15,6 +15,8 @@ public interface MonitoredPlayerRepository extends JpaRepository<MonitoredPlayer
     List<MonitoredPlayer> findByCampaignId(Long campaignId);
     List<MonitoredPlayer> findByPlayerId(Long playerId);
 
+    boolean existsByCampaignIdAndPlayerId(Long campaignId, Long playerId);
+
     @Modifying
     @Transactional
     @Query("UPDATE MonitoredPlayer m SET m.teamId = :newTeamId WHERE m.player.id = :playerId")

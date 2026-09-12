@@ -39,24 +39,13 @@ public class ReportService implements IReportService {
     public ReportDTO createReport(ReportSaveDTO dto, Long scoutId) {
         Player player = playerRepository.findById(dto.getPlayerId())
                 .orElseThrow(() -> new NoSuchElementException("Igrač nije pronađen sa ID-em: " + dto.getPlayerId()));
-
         User scout = userRepository.findById(scoutId)
                 .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen sa ID-em: " + scoutId));
-
         Team team = null;
         if (dto.getTeamAtTimeId() != null) {
             team = teamRepository.findById(dto.getTeamAtTimeId())
                     .orElseThrow(() -> new NoSuchElementException("Klub nije pronađen sa ID-em: " + dto.getTeamAtTimeId()));
         }
-
-        scoutRequestRepository.findByScoutIdAndPlayerIdAndStatusIn(
-                scoutId, 
-                player.getId(), 
-                List.of(RequestStatus.IN_PROGRESS)
-        ).ifPresent(request -> {
-            request.setStatus(RequestStatus.COMPLETED);
-            scoutRequestRepository.save(request);
-        });
 
         double multiplier = 1.0;
         if (team != null && team.getLeague() != null) {
@@ -70,7 +59,6 @@ public class ReportService implements IReportService {
         report.setCreatedAt(LocalDateTime.now());
         report.setOverallCommentary(dto.getOverallCommentary());
         report.setLeagueMultiplierAtTime(multiplier);
-
         Report savedReport = reportRepository.save(report);
         return mapToDTO(savedReport);
     }

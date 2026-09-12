@@ -1,20 +1,20 @@
 package com.football_club.Scouting.service.impl;
 
+import com.football_club.Auth.model.RoleEnum;
 import com.football_club.Auth.model.User;
 import com.football_club.Auth.repository.UserRepository;
-import com.football_club.Scouting.model.Player;
-import com.football_club.Scouting.repository.PlayerRepository;
 import com.football_club.Scouting.dto.ScoutRequestDTO;
-import com.football_club.Scouting.dto.ScoutRequestSaveDTO;
+import com.football_club.Scouting.model.MonitoredPlayer;
+import com.football_club.Scouting.model.Player;
 import com.football_club.Scouting.model.ScoutRequest;
 import com.football_club.Scouting.model.enums.RequestStatus;
+import com.football_club.Scouting.repository.MonitoredPlayerRepository;
 import com.football_club.Scouting.repository.ScoutRequestRepository;
 import com.football_club.Scouting.service.IScoutRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -24,37 +24,22 @@ import java.util.stream.Collectors;
 public class ScoutRequestService implements IScoutRequestService {
 
     private final ScoutRequestRepository scoutRequestRepository;
+    private final MonitoredPlayerRepository monitoredPlayerRepository;
     private final UserRepository userRepository;
-    private final PlayerRepository playerRepository;
 
     @Override
-    @Transactional
-    public ScoutRequestDTO createRequest(ScoutRequestSaveDTO dto, Long directorId) {
-        User director = userRepository.findById(directorId)
-                .orElseThrow(() -> new NoSuchElementException("Sportski direktor nije pronađen sa ID-em: " + directorId));
-
-        Player player = playerRepository.findById(dto.getPlayerId())
-                .orElseThrow(() -> new NoSuchElementException("Igrač nije pronađen sa ID-em: " + dto.getPlayerId()));
-
-        ScoutRequest request = ScoutRequest.builder()
-                .director(director)
-                .player(player)
-                .scout(null) // Unassigned on creation
-                .requestDate(LocalDateTime.now())
-                .instructions(dto.getInstructions())
-                .deadline(dto.getDeadline())
-                .status(RequestStatus.PENDING)
-                .build();
-
-        ScoutRequest saved = scoutRequestRepository.save(request);
-        return mapToDTO(saved);
+    @Transactional(readOnly = true)
+    public List<ScoutRequestDTO> getPendingRequests() {
+        return scoutRequestRepository.findByStatusWithDetails(RequestStatus.PENDING).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public ScoutRequestDTO getRequestById(Long id) {
         ScoutRequest request = scoutRequestRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting nije pronađen sa ID-em: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting sa ID-em " + id + " ne postoji."));
         return mapToDTO(request);
     }
 
@@ -68,19 +53,39 @@ public class ScoutRequestService implements IScoutRequestService {
 
     @Override
     @Transactional
-    public ScoutRequestDTO updateRequest(Long id, ScoutRequestSaveDTO dto) {
+    public ScoutRequestDTO claimRequest(Long id, Long scoutId) {
         ScoutRequest request = scoutRequestRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting nije pronađen sa ID-em: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting sa ID-em " + id + " nije pronađen."));
 
-        Player player = playerRepository.findById(dto.getPlayerId())
-                .orElseThrow(() -> new NoSuchElementException("Igrač nije pronađen sa ID-em: " + dto.getPlayerId()));
+        // Validation: Verify status is still PENDING
+        if (request.getStatus() != RequestStatus.PENDING) {
+            throw new IllegalStateException("Zahtev nije u statusu PENDING i ne može se preuzeti.");
+        }
 
-        request.setPlayer(player);
-        request.setInstructions(dto.getInstructions());
-        request.setDeadline(dto.getDeadline());
+        User scout = userRepository.findById(scoutId)
+                .orElseThrow(() -> new NoSuchElementException("Korisnik sa ID-em " + scoutId + " nije pronađen."));
 
-        ScoutRequest updated = scoutRequestRepository.save(request);
-        return mapToDTO(updated);
+        // Validation: Verify user has the SCOUT or ADMIN role
+        if (scout.getRole() != RoleEnum.ROLE_SCOUT && scout.getRole() != RoleEnum.ROLE_ADMIN) {
+            throw new IllegalArgumentException("Samo skauti mogu preuzimati zahteve za posmatranje.");
+        }
+
+        MonitoredPlayer monitoredPlayer = request.getMonitoredPlayer();
+
+        // Validation: Monitored player must not already have an assigned scout
+        if (monitoredPlayer.getScout() != null) {
+            throw new IllegalStateException("Ovaj igrač je već dodeljen drugom skautu.");
+        }
+
+        // Set the scout in MonitoredPlayer
+        monitoredPlayer.setScout(scout);
+        monitoredPlayerRepository.save(monitoredPlayer);
+
+        // Transition status to CLAIMED
+        request.setStatus(RequestStatus.CLAIMED);
+        ScoutRequest saved = scoutRequestRepository.save(request);
+
+        return mapToDTO(saved);
     }
 
     @Override
@@ -92,113 +97,27 @@ public class ScoutRequestService implements IScoutRequestService {
         scoutRequestRepository.deleteById(id);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ScoutRequestDTO> getUnclaimedRequests() {
-        return scoutRequestRepository.findByScoutIdIsNull().stream()
-                .filter(status -> status.getStatus() != RequestStatus.CANCELLED)
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ScoutRequestDTO> getRequestsByScout(Long scoutId) {
-        return scoutRequestRepository.findByScoutId(scoutId).stream()
-                .filter(status -> status.getStatus() != RequestStatus.CANCELLED)
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ScoutRequestDTO> getRequestsByDirector(Long directorId) {
-        return scoutRequestRepository.findByDirectorId(directorId).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public ScoutRequestDTO claimRequest(Long id, Long scoutId) {
-        ScoutRequest request = scoutRequestRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting nije pronađen."));
-
-        if (request.getScout() != null) {
-            throw new IllegalStateException("Ovaj zahtev je već preuzet od strane drugog skauta.");
-        }
-
-        User scout = userRepository.findById(scoutId)
-                .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen sa ID-em: " + scoutId));
-
-        request.setScout(scout);
-        request.setStatus(RequestStatus.IN_PROGRESS);
-
-        return mapToDTO(scoutRequestRepository.save(request));
-    }
-
-    @Override
-    @Transactional
-    public ScoutRequestDTO cancelRequest(Long id, Long scoutId) {
-        ScoutRequest request = scoutRequestRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting nije pronađen."));
-
-        User scout = userRepository.findById(scoutId)
-                .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen sa ID-em: " + scoutId));
-
-        if (!request.getScout().equals(scout)) {
-            throw new IllegalStateException("Ovaj zahtev nije preuzet od strane ovog skauta.");
-        }
-
-        request.setScout(null);
-        request.setStatus(RequestStatus.CANCELLED);
-
-        return mapToDTO(scoutRequestRepository.save(request));
-    }
-
-    @Override
-    @Transactional
-    public ScoutRequestDTO directorCancelRequest(Long id, Long directorId) {
-        ScoutRequest request = scoutRequestRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting nije pronađen."));
-
-        User director = userRepository.findById(directorId)
-                .orElseThrow(() -> new NoSuchElementException("Direktor nije pronađen sa ID-em: " + directorId));
-
-        if (!request.getDirector().equals(director)) {
-            throw new IllegalStateException("Vi niste napravili ovaj zahtev.");
-        }
-
-        request.setScout(null);
-        request.setStatus(RequestStatus.CANCELLED);
-
-        return mapToDTO(scoutRequestRepository.save(request));
-    }
-
-    @Override
-    @Transactional
-    public ScoutRequestDTO completeRequest(Long id) {
-        ScoutRequest request = scoutRequestRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Zahtev za skauting nije pronađen."));
-
-        request.setStatus(RequestStatus.COMPLETED);
-        return mapToDTO(scoutRequestRepository.save(request));
-    }
-
     private ScoutRequestDTO mapToDTO(ScoutRequest request) {
+        MonitoredPlayer mp = request.getMonitoredPlayer();
+        Player p = mp.getPlayer();
+        User assignedScout = mp.getScout();
+
         return ScoutRequestDTO.builder()
                 .id(request.getId())
-                .directorId(request.getDirector().getId())
-                .directorName(request.getDirector().getUsername())
-                .scoutId(request.getScout() != null ? request.getScout().getId() : null)
-                .scoutName(request.getScout() != null ? request.getScout().getUsername() : "Unassigned")
-                .playerId(request.getPlayer().getId())
-                .playerName(request.getPlayer().getName())
-                .playerSurname(request.getPlayer().getSurname())
+                .campaignId(request.getCampaign().getId())
+                .campaignName(request.getCampaign().getName())
+                .monitoredPlayerId(mp.getId())
+                .playerId(p.getId())
+                .playerName(p.getName())
+                .playerSurname(p.getSurname())
+                .photoUrl(p.getPhotoUrl())
+                .position(p.getPosition())
+                .currentTeamName(p.getCurrentTeam() != null ? p.getCurrentTeam().getName() : "Slobodan igrač")
+                .playerAge(p.getAge())
                 .requestDate(request.getRequestDate())
-                .instructions(request.getInstructions())
-                .deadline(request.getDeadline())
                 .status(request.getStatus())
+                .scoutId(assignedScout != null ? assignedScout.getId() : null)
+                .scoutUsername(assignedScout != null ? assignedScout.getUsername() : null)
                 .build();
     }
 }

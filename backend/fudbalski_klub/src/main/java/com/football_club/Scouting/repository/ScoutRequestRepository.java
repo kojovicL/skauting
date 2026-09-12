@@ -1,21 +1,33 @@
 package com.football_club.Scouting.repository;
 
 import com.football_club.Scouting.model.ScoutRequest;
+import com.football_club.Scouting.model.enums.RequestStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import com.football_club.Scouting.model.enums.RequestStatus;
 import java.util.Optional;
 
 @Repository
 public interface ScoutRequestRepository extends JpaRepository<ScoutRequest, Long> {
-    List<ScoutRequest> findByScoutIdIsNull();
-    List<ScoutRequest> findByScoutId(Long scoutId);
-    List<ScoutRequest> findByDirectorId(Long directorId);
-    Optional<ScoutRequest> findByScoutIdAndPlayerIdAndStatusIn(
-            Long scoutId, 
-            Long playerId, 
-            List<RequestStatus> statuses
-    );
+
+    @Query("""
+        SELECT sr FROM ScoutRequest sr
+        JOIN FETCH sr.campaign c
+        JOIN FETCH sr.monitoredPlayer mp
+        JOIN FETCH mp.player p
+        LEFT JOIN FETCH p.currentTeam
+        LEFT JOIN FETCH mp.scout
+        WHERE sr.status = :status
+        ORDER BY sr.requestDate DESC
+    """)
+    List<ScoutRequest> findByStatusWithDetails(@Param("status") RequestStatus status);
+
+    List<ScoutRequest> findByCampaignId(Long campaignId);
+
+    Optional<ScoutRequest> findByMonitoredPlayerId(Long monitoredPlayerId);
+
+    boolean existsByMonitoredPlayerId(Long monitoredPlayerId);
 }

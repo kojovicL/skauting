@@ -1,5 +1,7 @@
 package com.football_club.Scouting.service.impl;
 
+import com.football_club.Auth.model.RoleEnum;
+import com.football_club.Auth.model.User;
 import com.football_club.Clients.APIFootballClient;
 import com.football_club.Scouting.dto.OnboardPlayerRequest;
 import com.football_club.Scouting.model.*;
@@ -7,6 +9,7 @@ import com.football_club.Scouting.model.League;
 import com.football_club.Scouting.model.Player;
 import com.football_club.Scouting.model.Team;
 import com.football_club.Scouting.model.enums.Position;
+import com.football_club.Scouting.model.enums.RequestStatus;
 import com.football_club.Scouting.repository.*;
 import com.football_club.Scouting.service.IPlayerOnboardingService;
 import com.football_club.dto.apifootball.*;
@@ -36,10 +39,19 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
     private final SeasonalReportRepository seasonalReportRepository;
     private final SeasonalValuedMetricRepository seasonalValuedMetricRepository;
     private final MetricRepository metricRepository;
+    private final ScoutRequestRepository scoutRequestRepository;
 
     @Override
     @Transactional
-    public MonitoredPlayer onboardPlayer(OnboardPlayerRequest request) {
+    public MonitoredPlayer onboardPlayer(OnboardPlayerRequest request, User currentUser) {
+        Campaign campaign = campaignRepository.findById(request.getCampaignId())
+                .orElseThrow(() -> new IllegalArgumentException("Kampanja ne postoji."));
+
+        // Early validation: Fail immediately before making external API calls or DB writes
+        if (monitoredPlayerRepository.existsByCampaignIdAndPlayerId(campaign.getId(), request.getApiPlayerId())) {
+            throw new IllegalArgumentException("Igrač se već nalazi u ovoj kampanji.");
+        }
+
         int targetSeason = request.getSeason() != null ? request.getSeason() : 2024;
 
         PlayerSearchResponse targetResponse = apiClient.getPlayerByIdAndSeason(request.getApiPlayerId(), targetSeason);
@@ -54,7 +66,6 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
             throw new IllegalArgumentException("Nisu pronađene statistike za igrača u datoj sezoni.");
         }
 
-        // Pick the competition where the player accumulated the most playing time
         Statistic primaryStat = primaryData.getStatistics().stream()
                 .filter(s -> s.getLeague() != null && s.getLeague().getId() != null)
                 .max(Comparator.comparingInt(this::getMinutesPlayed))
@@ -62,7 +73,6 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
 
         League currentLeague = resolveLeague(primaryStat.getLeague());
         Team currentTeam = resolveTeam(primaryStat.getTeam(), currentLeague);
-
         double difficultyMultiplier = currentLeague != null ? currentLeague.getDifficultyMultiplier() : 1.0;
 
         Player player = playerRepository.findById(apiPlayer.getId().longValue()).orElseGet(Player::new);
@@ -79,11 +89,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         Player savedPlayer = playerRepository.save(player);
 
         createHistoricalSeasonalReport(savedPlayer, targetSeason, primaryStat, difficultyMultiplier);
-
         backfillPreviousSeasons(savedPlayer, targetSeason, 2);
-
-        Campaign campaign = campaignRepository.findById(request.getCampaignId())
-                .orElseThrow(() -> new IllegalArgumentException("Kampanja ne postoji."));
 
         MonitoredPlayer mp = new MonitoredPlayer();
         mp.setPlayer(savedPlayer);
@@ -91,7 +97,23 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         mp.setTeamId(currentTeam != null ? currentTeam.getId() : 0L);
         mp.setAddedAt(LocalDate.now());
 
-        return monitoredPlayerRepository.save(mp);
+        if (currentUser != null && currentUser.getRole() == RoleEnum.ROLE_SCOUT) {
+            mp.setScout(currentUser);
+            return monitoredPlayerRepository.save(mp);
+        } else {
+            mp.setScout(null);
+            MonitoredPlayer savedMp = monitoredPlayerRepository.save(mp);
+
+            ScoutRequest scoutRequest = ScoutRequest.builder()
+                    .campaign(campaign)
+                    .monitoredPlayer(savedMp)
+                    .requestDate(savedMp.getAddedAt())
+                    .status(RequestStatus.PENDING)
+                    .build();
+            scoutRequestRepository.save(scoutRequest);
+
+            return savedMp;
+        }
     }
 
     private void backfillPreviousSeasons(Player player, int currentSeason, int seasonsToBackfill) {
@@ -107,7 +129,6 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
                 if (pastResponse.getResponse() != null && !pastResponse.getResponse().isEmpty()) {
                     List<Statistic> stats = pastResponse.getResponse().get(0).getStatistics();
                     if (stats != null && !stats.isEmpty()) {
-                        // Pick competition with highest minutes for each historical season as well
                         Statistic pastStat = stats.stream()
                                 .filter(s -> s.getLeague() != null && s.getLeague().getId() != null)
                                 .max(Comparator.comparingInt(this::getMinutesPlayed))
@@ -233,7 +254,6 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
 
     private void addMetric(String name, Object rawValue, SeasonalReport report, Map<String, Metric> metricMap, List<SeasonalValuedMetric> list) {
         Double value = parseDoubleSafely(rawValue);
-        // Default to 0.0 if not tracked or null in API-Football
         double finalValue = value != null ? value : 0.0;
         if (metricMap.containsKey(name)) {
             list.add(SeasonalValuedMetric.builder()
