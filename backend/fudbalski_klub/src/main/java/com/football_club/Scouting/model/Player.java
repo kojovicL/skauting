@@ -35,6 +35,9 @@ public class Player {
     private Integer age;
     private String nationality;
     private String photoUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "position", length = 20)
     private Position position; // e.g., "Attacker", "Midfielder", "Defender", "Goalkeeper"
 
     // Current club assignment (Mutable upon transfer)

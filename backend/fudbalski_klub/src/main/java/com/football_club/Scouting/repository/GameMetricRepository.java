@@ -27,7 +27,7 @@ public interface GameMetricRepository extends JpaRepository<GameMetric, Long> {
     List<GameMetric> findByMatchIdAndPlayerId(Long matchId, Long playerId);
     Optional<GameMetric> findByMatchIdAndPlayerIdAndMetricId(Long matchId, Long playerId, Long metricId);
     boolean existsByMatchIdAndPlayerIdAndMetricId(Long matchId, Long playerId, Long metricId);
-    @Query("SELECT gm FROM GameMetric gm WHERE gm.player.id = :playerId ORDER BY gm.game.matchDate DESC")
+    @Query("SELECT gm FROM GameMetric gm WHERE gm.player.id = :playerId ORDER BY gm.match.matchDate DESC")
     List<GameMetric> findRecentMetricsByPlayer(@Param("playerId") Long playerId, Pageable pageable);
     @Query(nativeQuery = true, value =
             "WITH RankedGames AS ( " +
