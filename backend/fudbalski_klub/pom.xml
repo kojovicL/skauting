@@ -220,18 +220,81 @@
 				<groupId>org.jsonschema2pojo</groupId>
 				<artifactId>jsonschema2pojo-maven-plugin</artifactId>
 				<version>1.2.1</version>
-				<configuration>
-					<sourceDirectory>${basedir}/src/main/resources/json-schemas</sourceDirectory>
-					<targetPackage>com.football_club.dto.apifootball</targetPackage>
-					<sourceType>json</sourceType>
-					<annotationStyle>jackson2</annotationStyle>
-					<includeConstructors>true</includeConstructors>
-				</configuration>
 				<executions>
 					<execution>
+						<id>generate-player-search</id>
 						<goals>
 							<goal>generate</goal>
 						</goals>
+						<configuration>
+							<sourcePaths>
+								<sourcePath>${basedir}/src/main/resources/json-schemas/player-search-response.json</sourcePath>
+							</sourcePaths>
+							<targetPackage>com.football_club.dto.apifootball.playersearch</targetPackage>
+							<sourceType>json</sourceType>
+							<annotationStyle>jackson2</annotationStyle>
+							<includeConstructors>true</includeConstructors>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-player-profile</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<sourcePaths>
+								<sourcePath>${basedir}/src/main/resources/json-schemas/player-profile-response.json</sourcePath>
+							</sourcePaths>
+							<targetPackage>com.football_club.dto.apifootball.playerprofile</targetPackage>
+							<sourceType>json</sourceType>
+							<annotationStyle>jackson2</annotationStyle>
+							<includeConstructors>true</includeConstructors>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-team-search</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<sourcePaths>
+								<sourcePath>${basedir}/src/main/resources/json-schemas/team-search.json</sourcePath>
+							</sourcePaths>
+							<targetPackage>com.football_club.dto.apifootball.teamsearch</targetPackage>
+							<sourceType>json</sourceType>
+							<annotationStyle>jackson2</annotationStyle>
+							<includeConstructors>true</includeConstructors>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-fixtures</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<sourcePaths>
+								<sourcePath>${basedir}/src/main/resources/json-schemas/fixtures-response.json</sourcePath>
+							</sourcePaths>
+							<targetPackage>com.football_club.dto.apifootball.fixtures</targetPackage>
+							<sourceType>json</sourceType>
+							<annotationStyle>jackson2</annotationStyle>
+							<includeConstructors>true</includeConstructors>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-player-stats</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<sourcePaths>
+								<sourcePath>${basedir}/src/main/resources/json-schemas/player-stats.json</sourcePath>
+							</sourcePaths>
+							<targetPackage>com.football_club.dto.apifootball.playerstats</targetPackage>
+							<sourceType>json</sourceType>
+							<annotationStyle>jackson2</annotationStyle>
+							<includeConstructors>true</includeConstructors>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

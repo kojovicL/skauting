@@ -3,6 +3,9 @@ package com.football_club.Scouting.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(
         name = "api_match_stats",
@@ -35,45 +38,9 @@ public class ApiMatchStat {
     private Boolean isSubstitute;
     private Boolean isCaptain;
 
-    // Offensive Output
+    // Core Summary Fields
     private Integer goals;
     private Integer assists;
-    private Integer shotsTotal;
-    private Integer shotsOnTarget;
-
-    // Passing & Playmaking
-    private Integer totalPasses;
-    private Integer keyPasses;
-    private Double passAccuracy;
-
-    // Defensive Actions
-    private Integer tackles;
-    private Integer blocks;
-    private Integer interceptions;
-
-    // Duels & 1v1 Situations
-    private Integer totalDuels;
-    private Integer duelsWon;
-    private Integer dribbleAttempts;
-    private Integer successfulDribbles;
-    private Integer dribbledPast;
-
-    // Discipline & Fouls
-    private Integer foulsCommitted;
-    private Integer foulsDrawn;
-    private Integer yellowCards;
-    private Integer redCards;
-
-    // Goalkeeping (Nullable for outfield players)
-    private Integer saves;
-    private Integer goalsConceded;
-
-    // Penalty Tracking
-    private Integer penaltiesWon;
-    private Integer penaltiesCommitted;
-    private Integer penaltiesScored;
-    private Integer penaltiesMissed;
-    private Integer penaltiesSaved;
 
     // Normalized Ratings
     @Column(nullable = false)
@@ -81,4 +48,9 @@ public class ApiMatchStat {
 
     @Column(nullable = false)
     private Double weightedRating; // rawRating * match.getLeague().getDifficultyMultiplier()
+
+    // Dynamic Metrics
+    @OneToMany(mappedBy = "apiMatchStat", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ApiMatchValuedMetric> matchMetrics = new ArrayList<>();
 }

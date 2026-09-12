@@ -1,8 +1,11 @@
 package com.football_club.Clients;
 
-import com.football_club.dto.apifootball.PlayerProfileResponse;
-import com.football_club.dto.apifootball.TeamSearch;
-import com.football_club.dto.apifootball.PlayerSearchResponse;
+import com.football_club.dto.apifootball.playerprofile.PlayerProfileResponse;
+import com.football_club.dto.apifootball.teamsearch.TeamSearch;
+import com.football_club.dto.apifootball.playersearch.PlayerSearchResponse;
+import com.football_club.dto.apifootball.fixtures.FixturesResponse;
+import com.football_club.dto.apifootball.playerstats.PlayerStats;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -58,6 +61,45 @@ public class APIFootballClient {
         } catch (Exception e) {
             log.error("Failed to parse PlayerSearchResponse. Raw body: {}", json, e);
             throw new RuntimeException("API-Football response parsing error: " + e.getMessage(), e);
+        }
+    }
+
+    public FixturesResponse getTeamFixtures(Long teamId, LocalDate from, LocalDate to, Integer season) {
+        String json = restClient.get()
+                .uri("/fixtures?team={team}&from={from}&to={to}&season={season}", teamId, from.toString(), to.toString(), season)
+                .retrieve()
+                .body(String.class);
+        try {
+            return objectMapper.readValue(json, FixturesResponse.class);
+        } catch (Exception e) {
+            log.error("Failed to parse FixturesResponse for team {}", teamId, e);
+            throw new RuntimeException("API-Football fixtures parsing error", e);
+        }
+    }
+
+    public PlayerStats getFixturePlayerStats(Long fixtureId, Long teamId) {
+        String json = restClient.get()
+                .uri("/fixtures/players?fixture={fixture}&team={team}", fixtureId, teamId)
+                .retrieve()
+                .body(String.class);
+        try {
+            return objectMapper.readValue(json, PlayerStats.class);
+        } catch (Exception e) {
+            log.error("Failed to parse PlayerStats for fixture {} team {}", fixtureId, teamId, e);
+            throw new RuntimeException("API-Football player stats parsing error", e);
+        }
+    }
+
+    public JsonNode getLeagueSeasonDetails(Long leagueId, Integer season) {
+        String json = restClient.get()
+                .uri("/leagues?id={id}&season={season}", leagueId, season)
+                .retrieve()
+                .body(String.class);
+        try {
+            return objectMapper.readTree(json);
+        } catch (Exception e) {
+            log.error("Failed to parse league season details for league {}", leagueId, e);
+            return null;
         }
     }
 }

@@ -21,4 +21,7 @@ public interface MonitoredPlayerRepository extends JpaRepository<MonitoredPlayer
     @Transactional
     @Query("UPDATE MonitoredPlayer m SET m.teamId = :newTeamId WHERE m.player.id = :playerId")
     void updateTeamIdForPlayer(@Param("playerId") Long playerId, @Param("newTeamId") Long newTeamId);
+
+    @Query("SELECT mp FROM MonitoredPlayer mp JOIN FETCH mp.campaign c JOIN FETCH mp.player p WHERE c.status = 'ACTIVE'")
+    List<MonitoredPlayer> findAllActiveMonitoredPlayers();
 }

@@ -12,7 +12,9 @@ import com.football_club.Scouting.model.enums.Position;
 import com.football_club.Scouting.model.enums.RequestStatus;
 import com.football_club.Scouting.repository.*;
 import com.football_club.Scouting.service.IPlayerOnboardingService;
-import com.football_club.dto.apifootball.*;
+import com.football_club.dto.apifootball.playersearch.PlayerSearchResponse;
+import com.football_club.dto.apifootball.playersearch.Response;
+import com.football_club.dto.apifootball.playersearch.Statistic;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -59,8 +61,8 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
             throw new IllegalArgumentException("Igrač nije pronađen na API-Football za datu sezonu: " + targetSeason);
         }
 
-        Response__1 primaryData = targetResponse.getResponse().get(0);
-        Player__1 apiPlayer = primaryData.getPlayer();
+        Response primaryData = targetResponse.getResponse().get(0);
+        com.football_club.dto.apifootball.playersearch.Player apiPlayer = primaryData.getPlayer();
 
         if (primaryData.getStatistics() == null || primaryData.getStatistics().isEmpty()) {
             throw new IllegalArgumentException("Nisu pronađene statistike za igrača u datoj sezoni.");
@@ -152,7 +154,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
                 : 0;
     }
 
-    private League resolveLeague(com.football_club.dto.apifootball.League apiLeague) {
+    private League resolveLeague(com.football_club.dto.apifootball.playersearch.League apiLeague) {
         if (apiLeague == null || apiLeague.getId() == null) return null;
         return leagueRepository.findById(apiLeague.getId().longValue())
                 .orElseGet(() -> {
@@ -164,7 +166,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
                 });
     }
 
-    private Team resolveTeam(com.football_club.dto.apifootball.Team apiTeam, League league) {
+    private Team resolveTeam(com.football_club.dto.apifootball.playersearch.Team apiTeam, League league) {
         if (apiTeam == null || apiTeam.getId() == null) return null;
         return teamRepository.findById(apiTeam.getId().longValue())
                 .orElseGet(() -> {
