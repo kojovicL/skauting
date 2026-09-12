@@ -5,6 +5,7 @@ import com.football_club.dto.apifootball.teamsearch.TeamSearch;
 import com.football_club.dto.apifootball.playersearch.PlayerSearchResponse;
 import com.football_club.dto.apifootball.fixtures.FixturesResponse;
 import com.football_club.dto.apifootball.playerstats.PlayerStats;
+import com.football_club.dto.apifootball.transfersresponse.TransfersResponse;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,13 +16,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
 @Service
 @RequiredArgsConstructor
 public class APIFootballClient {
+
     private static final Logger log = LoggerFactory.getLogger(APIFootballClient.class);
     private final RestClient restClient;
-
     private final ObjectMapper objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -51,12 +51,9 @@ public class APIFootballClient {
         try {
             JsonNode rootNode = objectMapper.readTree(json);
             JsonNode errorsNode = rootNode.get("errors");
-
-            // API-Football returns errors either as an empty array [] or as an object {"errorKey": "message"}
             if (errorsNode != null && errorsNode.isObject() && !errorsNode.isEmpty()) {
                 throw new RuntimeException("API-Football error: " + errorsNode.toString());
             }
-
             return objectMapper.treeToValue(rootNode, PlayerSearchResponse.class);
         } catch (Exception e) {
             log.error("Failed to parse PlayerSearchResponse. Raw body: {}", json, e);
@@ -99,6 +96,19 @@ public class APIFootballClient {
             return objectMapper.readTree(json);
         } catch (Exception e) {
             log.error("Failed to parse league season details for league {}", leagueId, e);
+            return null;
+        }
+    }
+
+    public TransfersResponse getPlayerTransfers(Long playerId) {
+        String json = restClient.get()
+                .uri("/transfers?player={player}", playerId)
+                .retrieve()
+                .body(String.class);
+        try {
+            return objectMapper.readValue(json, TransfersResponse.class);
+        } catch (Exception e) {
+            log.error("Failed to parse transfers for player {}", playerId, e);
             return null;
         }
     }

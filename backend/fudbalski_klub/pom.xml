@@ -296,6 +296,21 @@
 							<includeConstructors>true</includeConstructors>
 						</configuration>
 					</execution>
+					<execution>
+						<id>generate-transfers-response</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<sourcePaths>
+								<sourcePath>${basedir}/src/main/resources/json-schemas/transfers-response.json</sourcePath>
+							</sourcePaths>
+							<targetPackage>com.football_club.dto.apifootball.transfersresponse</targetPackage>
+							<sourceType>json</sourceType>
+							<annotationStyle>jackson2</annotationStyle>
+							<includeConstructors>true</includeConstructors>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 		</plugins>

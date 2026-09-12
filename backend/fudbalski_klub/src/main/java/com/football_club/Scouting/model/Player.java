@@ -29,6 +29,7 @@ public class Player {
 
     @Column(nullable = false)
     private String name;
+
     @Column(nullable = false)
     private String surname;
 
@@ -38,9 +39,9 @@ public class Player {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "position", length = 20)
-    private Position position; // e.g., "Attacker", "Midfielder", "Defender", "Goalkeeper"
+    private Position position;
 
-    // Current club assignment (Mutable upon transfer)
+    // Current club assignment
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_team_id")
     private Team currentTeam;
@@ -49,9 +50,10 @@ public class Player {
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MonitoredPlayer> monitoredInstances = new ArrayList<>();
 
-    /**
-     * Convenience helper to derive the active league without redundant DB mapping.
-     */
+    // Historical and current contracts
+    @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Contract> contracts = new ArrayList<>();
+
     @Transient
     public League getCurrentLeague() {
         return currentTeam != null ? currentTeam.getLeague() : null;

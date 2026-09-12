@@ -15,6 +15,9 @@ import com.football_club.Scouting.service.IPlayerOnboardingService;
 import com.football_club.dto.apifootball.playersearch.PlayerSearchResponse;
 import com.football_club.dto.apifootball.playersearch.Response;
 import com.football_club.dto.apifootball.playersearch.Statistic;
+import com.football_club.dto.apifootball.transfersresponse.In;
+import com.football_club.dto.apifootball.transfersresponse.Transfer;
+import com.football_club.dto.apifootball.transfersresponse.TransfersResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +45,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
     private final SeasonalValuedMetricRepository seasonalValuedMetricRepository;
     private final MetricRepository metricRepository;
     private final ScoutRequestRepository scoutRequestRepository;
+    private final ContractRepository contractRepository;
 
     @Override
     @Transactional
@@ -49,7 +53,6 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         Campaign campaign = campaignRepository.findById(request.getCampaignId())
                 .orElseThrow(() -> new IllegalArgumentException("Kampanja ne postoji."));
 
-        // Early validation: Fail immediately before making external API calls or DB writes
         if (monitoredPlayerRepository.existsByCampaignIdAndPlayerId(campaign.getId(), request.getApiPlayerId())) {
             throw new IllegalArgumentException("Igrač se već nalazi u ovoj kampanji.");
         }
@@ -93,6 +96,9 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         createHistoricalSeasonalReport(savedPlayer, targetSeason, primaryStat, difficultyMultiplier);
         backfillPreviousSeasons(savedPlayer, targetSeason, 2);
 
+        // Record full career transfer and contract history
+        recordPlayerContracts(savedPlayer);
+
         MonitoredPlayer mp = new MonitoredPlayer();
         mp.setPlayer(savedPlayer);
         mp.setCampaign(campaign);
@@ -116,6 +122,97 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
 
             return savedMp;
         }
+    }
+
+    private void recordPlayerContracts(Player player) {
+        if (contractRepository.existsByPlayerId(player.getId())) {
+            return;
+        }
+
+        try {
+            TransfersResponse response = apiClient.getPlayerTransfers(player.getId());
+            if (response == null || response.getResponse() == null || response.getResponse().isEmpty()) {
+                fallbackToCurrentClubContract(player);
+                return;
+            }
+
+            List<Transfer> rawTransfers = response.getResponse().get(0).getTransfers();
+            if (rawTransfers == null || rawTransfers.isEmpty()) {
+                fallbackToCurrentClubContract(player);
+                return;
+            }
+
+            // Filter transfers with valid in-teams and dates, then sort chronologically (oldest -> newest)
+            List<Transfer> chronological = rawTransfers.stream()
+                    .filter(t -> t.getTeams() != null && t.getTeams().getIn() != null && t.getTeams().getIn().getId() != null)
+                    .filter(t -> t.getDate() != null && !t.getDate().isBlank())
+                    .sorted(Comparator.comparing(t -> LocalDate.parse(t.getDate())))
+                    .toList();
+
+            if (chronological.isEmpty()) {
+                fallbackToCurrentClubContract(player);
+                return;
+            }
+
+            List<Contract> contracts = new ArrayList<>();
+
+            for (int i = 0; i < chronological.size(); i++) {
+                Transfer entry = chronological.get(i);
+                In inTeamDto = entry.getTeams().getIn();
+
+                Team team = resolveOrCreateHistoricalTeam(
+                        inTeamDto.getId().longValue(),
+                        inTeamDto.getName(),
+                        inTeamDto.getLogo()
+                );
+
+                LocalDate startDate = LocalDate.parse(entry.getDate());
+                LocalDate endDate = (i < chronological.size() - 1)
+                        ? LocalDate.parse(chronological.get(i + 1).getDate())
+                        : null; // null represents the latest/active contract
+
+                String transferType = entry.getType() != null ? entry.getType().toString() : "N/A";
+
+                Contract contract = Contract.builder()
+                        .player(player)
+                        .team(team)
+                        .startDate(startDate)
+                        .endDate(endDate)
+                        .transferType(transferType)
+                        .build();
+
+                contracts.add(contract);
+            }
+
+            contractRepository.saveAll(contracts);
+        } catch (Exception e) {
+            log.warn("Neuspešno beleženje ugovora za igrača {}: {}", player.getId(), e.getMessage());
+            fallbackToCurrentClubContract(player);
+        }
+    }
+
+    private void fallbackToCurrentClubContract(Player player) {
+        if (player.getCurrentTeam() != null && !contractRepository.existsByPlayerId(player.getId())) {
+            Contract currentContract = Contract.builder()
+                    .player(player)
+                    .team(player.getCurrentTeam())
+                    .startDate(LocalDate.of(2024, 1, 1))
+                    .endDate(null)
+                    .transferType("Current Club")
+                    .build();
+            contractRepository.save(currentContract);
+        }
+    }
+
+    private Team resolveOrCreateHistoricalTeam(Long teamId, String name, String logo) {
+        return teamRepository.findById(teamId).orElseGet(() -> {
+            Team t = new Team();
+            t.setId(teamId);
+            t.setName(name != null ? name : "Unknown Team");
+            t.setLogoUrl(logo);
+            t.setLeague(null);
+            return teamRepository.save(t);
+        });
     }
 
     private void backfillPreviousSeasons(Player player, int currentSeason, int seasonsToBackfill) {
