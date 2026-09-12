@@ -28,6 +28,18 @@ public class SeasonalReport {
     @Column(nullable = false)
     private Integer seasonYear;
 
+    @Column(nullable = false)
+    private Integer minutesPlayed;
+
+    @Column(nullable = false)
+    private double goalsPer90;
+
+    @Column(nullable = false)
+    private double assistsPer90;
+
+    @Column(nullable = false)
+    private double avgWeightedRating;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReportSource source;
