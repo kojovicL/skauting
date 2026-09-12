@@ -1,6 +1,7 @@
 package com.football_club.Scouting.controller;
 
 import com.football_club.Scouting.service.impl.MatchProcessingCronService;
+import com.football_club.Scouting.service.impl.PlayerTransferSyncCronService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,12 +16,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CronTestController {
 
-    private final MatchProcessingCronService cronService;
+    private final MatchProcessingCronService matchCronService;
+    private final PlayerTransferSyncCronService transferCronService;
 
     @PostMapping("/trigger-match-cron")
     @PreAuthorize("hasAnyRole('SCOUT', 'SPORTS_DIRECTOR', 'ADMIN')")
     public ResponseEntity<Map<String, String>> triggerMatchCron() {
-        cronService.processDailyMatches();
+        matchCronService.processDailyMatches();
         return ResponseEntity.ok(Map.of("message", "Daily match processing executed successfully."));
+    }
+
+    @PostMapping("/trigger-transfer-cron")
+    @PreAuthorize("hasAnyRole('SCOUT', 'SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<Map<String, String>> triggerTransferCron() {
+        transferCronService.syncAllPlayerTransfers();
+        return ResponseEntity.ok(Map.of("message", "Daily transfer sync executed successfully."));
     }
 }
