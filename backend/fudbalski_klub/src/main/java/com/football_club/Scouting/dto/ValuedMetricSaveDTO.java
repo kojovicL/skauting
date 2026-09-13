@@ -8,7 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ValuedMetricSaveDTO {
-    private Long reportId;
     private Long metricId;
     private double value;
 }

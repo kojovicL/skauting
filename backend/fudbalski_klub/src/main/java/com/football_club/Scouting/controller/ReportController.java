@@ -2,6 +2,7 @@ package com.football_club.Scouting.controller;
 
 import com.football_club.Auth.model.User;
 import com.football_club.Scouting.dto.ReportDTO;
+import com.football_club.Scouting.dto.ReportDraftDataDTO;
 import com.football_club.Scouting.dto.ReportSaveDTO;
 import com.football_club.Scouting.service.IReportService;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +21,19 @@ public class ReportController {
 
     private final IReportService reportService;
 
+    @GetMapping("/draft-data")
+    @PreAuthorize("hasAnyRole('SCOUT', 'SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<ReportDraftDataDTO> getReportDraftData(
+            @RequestParam Long playerId,
+            @RequestParam Long matchId) {
+        return ResponseEntity.ok(reportService.getReportDraftData(playerId, matchId));
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('SCOUT', 'ADMIN')")
     public ResponseEntity<ReportDTO> createReport(
             @RequestBody ReportSaveDTO reportSaveDTO,
             @AuthenticationPrincipal User userDetails) {
-        
         ReportDTO createdReport = reportService.createReport(reportSaveDTO, userDetails.getId());
         return new ResponseEntity<>(createdReport, HttpStatus.CREATED);
     }
@@ -50,7 +58,6 @@ public class ReportController {
             @PathVariable Long id,
             @RequestBody ReportSaveDTO reportSaveDTO,
             @AuthenticationPrincipal User userDetails) {
-
         if (!userDetails.getRole().name().equals("ROLE_ADMIN")) {
             ReportDTO existing = reportService.getReportById(id);
             if (!existing.getScoutId().equals(userDetails.getId())) {
@@ -58,7 +65,6 @@ public class ReportController {
                         .body("Nemate dozvolu da menjate tuđe izveštaje!");
             }
         }
-
         ReportDTO updatedReport = reportService.updateReport(id, reportSaveDTO, userDetails.getId());
         return ResponseEntity.ok(updatedReport);
     }
@@ -68,8 +74,6 @@ public class ReportController {
     public ResponseEntity<?> deleteReport(
             @PathVariable Long id,
             @AuthenticationPrincipal User userDetails) {
-
-        // Security check: Non-admins can only delete their own reports
         if (!userDetails.getRole().name().equals("ROLE_ADMIN")) {
             ReportDTO existing = reportService.getReportById(id);
             if (!existing.getScoutId().equals(userDetails.getId())) {
@@ -77,7 +81,6 @@ public class ReportController {
                         .body("Nemate dozvolu da obrišete tuđe izveštaje!");
             }
         }
-
         reportService.deleteReport(id);
         return ResponseEntity.noContent().build();
     }
