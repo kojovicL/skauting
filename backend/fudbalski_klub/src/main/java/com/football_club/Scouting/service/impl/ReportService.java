@@ -252,4 +252,29 @@ public class ReportService implements IReportService {
                 .valuedMetrics(metrics)
                 .build();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PendingReportMatchDTO> getPendingMatchesForScout(Long scoutId) {
+        return apiMatchStatRepository.findPendingUnreportedMatchesForScout(scoutId).stream()
+                .map(stat -> PendingReportMatchDTO.builder()
+                        .matchId(stat.getMatch().getId())
+                        .matchDate(stat.getMatch().getMatchDate())
+                        .homeTeamName(stat.getMatch().getHomeTeam().getName())
+                        .homeTeamLogo(stat.getMatch().getHomeTeam().getLogoUrl())
+                        .homeGoals(stat.getMatch().getHomeGoals())
+                        .awayTeamName(stat.getMatch().getAwayTeam().getName())
+                        .awayTeamLogo(stat.getMatch().getAwayTeam().getLogoUrl())
+                        .awayGoals(stat.getMatch().getAwayGoals())
+                        .leagueName(stat.getMatch().getLeague().getName())
+                        .playerId(stat.getPlayer().getId())
+                        .playerName(stat.getPlayer().getName())
+                        .playerSurname(stat.getPlayer().getSurname())
+                        .playerPhotoUrl(stat.getPlayer().getPhotoUrl())
+                        .playerPosition(stat.getPlayer().getPosition() != null ? stat.getPlayer().getPosition().name() : null)
+                        .minutesPlayed(stat.getMinutesPlayed())
+                        .rating(stat.getRawRating())
+                        .build())
+                .collect(Collectors.toList());
+    }
 }

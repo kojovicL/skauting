@@ -1,6 +1,7 @@
 package com.football_club.Scouting.controller;
 
 import com.football_club.Auth.model.User;
+import com.football_club.Scouting.dto.PendingReportMatchDTO;
 import com.football_club.Scouting.dto.ReportDTO;
 import com.football_club.Scouting.dto.ReportDraftDataDTO;
 import com.football_club.Scouting.dto.ReportSaveDTO;
@@ -110,5 +111,11 @@ public class ReportController {
     public ResponseEntity<ReportDTO> getLatestReportForPlayer(@PathVariable Long playerId) {
         ReportDTO report = reportService.getLatestReportByPlayer(playerId);
         return ResponseEntity.ok(report);
+    }
+
+    @GetMapping("/pending-matches")
+    @PreAuthorize("hasAnyRole('SCOUT', 'ADMIN')")
+    public ResponseEntity<List<PendingReportMatchDTO>> getPendingMatches(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(reportService.getPendingMatchesForScout(userDetails.getId()));
     }
 }

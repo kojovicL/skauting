@@ -1,5 +1,6 @@
 package com.football_club.Scouting.service;
 
+import com.football_club.Scouting.dto.PendingReportMatchDTO;
 import com.football_club.Scouting.dto.ReportDTO;
 import com.football_club.Scouting.dto.ReportDraftDataDTO;
 import com.football_club.Scouting.dto.ReportSaveDTO;
@@ -16,4 +17,5 @@ public interface IReportService {
     List<ReportDTO> getReportsByScout(Long scoutId);
     List<ReportDTO> getReportsByPlayer(Long playerId);
     ReportDTO getLatestReportByPlayer(Long playerId);
+    List<PendingReportMatchDTO> getPendingMatchesForScout(Long scoutId);
 }
