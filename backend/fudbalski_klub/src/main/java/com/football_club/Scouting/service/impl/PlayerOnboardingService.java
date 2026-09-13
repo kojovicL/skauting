@@ -93,7 +93,14 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         player.setCurrentTeam(currentTeam);
         Player savedPlayer = playerRepository.save(player);
 
-        createHistoricalSeasonalReport(savedPlayer, targetSeason, primaryStat, difficultyMultiplier);
+        for (Statistic stat : primaryData.getStatistics()) {
+            if (stat.getLeague() != null && stat.getLeague().getId() != null && getMinutesPlayed(stat) > 0) {
+                League league = resolveLeague(stat.getLeague());
+                double diffMultiplier = league != null ? league.getDifficultyMultiplier() : 1.0;
+                createHistoricalSeasonalReport(savedPlayer, targetSeason, stat, league, diffMultiplier);
+            }
+        }
+
         backfillPreviousSeasons(savedPlayer, targetSeason, 2);
 
         // Record full career transfer and contract history
@@ -219,25 +226,18 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
     private void backfillPreviousSeasons(Player player, int currentSeason, int seasonsToBackfill) {
         for (int i = 1; i <= seasonsToBackfill; i++) {
             int pastSeason = currentSeason - i;
-
-            if (seasonalReportRepository.existsByPlayerIdAndSeasonYear(player.getId(), pastSeason)) {
-                continue;
-            }
-
             try {
                 PlayerSearchResponse pastResponse = apiClient.getPlayerByIdAndSeason(player.getId(), pastSeason);
                 if (pastResponse.getResponse() != null && !pastResponse.getResponse().isEmpty()) {
                     List<Statistic> stats = pastResponse.getResponse().get(0).getStatistics();
                     if (stats != null && !stats.isEmpty()) {
-                        Statistic pastStat = stats.stream()
-                                .filter(s -> s.getLeague() != null && s.getLeague().getId() != null)
-                                .max(Comparator.comparingInt(this::getMinutesPlayed))
-                                .orElse(stats.get(0));
-
-                        League pastLeague = resolveLeague(pastStat.getLeague());
-                        double pastMultiplier = pastLeague != null ? pastLeague.getDifficultyMultiplier() : 1.0;
-
-                        createHistoricalSeasonalReport(player, pastSeason, pastStat, pastMultiplier);
+                        for (Statistic stat : stats) {
+                            if (stat.getLeague() != null && stat.getLeague().getId() != null && getMinutesPlayed(stat) > 0) {
+                                League pastLeague = resolveLeague(stat.getLeague());
+                                double pastMultiplier = pastLeague != null ? pastLeague.getDifficultyMultiplier() : 1.0;
+                                createHistoricalSeasonalReport(player, pastSeason, stat, pastLeague, pastMultiplier);
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -277,23 +277,22 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
                 });
     }
 
-    private void createHistoricalSeasonalReport(Player player, int seasonYear, Statistic apiStat, double difficultyMultiplier) {
-        if (seasonalReportRepository.existsByPlayerIdAndSeasonYear(player.getId(), seasonYear)) {
+    private void createHistoricalSeasonalReport(Player player, int seasonYear, Statistic apiStat, League league, double difficultyMultiplier) {
+        if (seasonalReportRepository.existsByPlayerIdAndSeasonYearAndLeagueId(player.getId(), seasonYear, league.getId())) {
             return;
         }
 
-        int minutes = apiStat.getGames() != null && apiStat.getGames().getMinutes() != null ? apiStat.getGames().getMinutes() : 0;
+        int minutes = getMinutesPlayed(apiStat);
         int goals = apiStat.getGoals() != null && apiStat.getGoals().getTotal() != null ? apiStat.getGoals().getTotal() : 0;
         int assists = apiStat.getGoals() != null && apiStat.getGoals().getAssists() != null ? apiStat.getGoals().getAssists() : 0;
-
         double rating = apiStat.getGames() != null && apiStat.getGames().getRating() != null ? parseDoubleSafely(apiStat.getGames().getRating()) : 0.0;
         double weightedRating = rating * difficultyMultiplier;
-
         double goalsPer90 = minutes > 0 ? ((double) goals / minutes) * 90.0 : 0.0;
         double assistsPer90 = minutes > 0 ? ((double) assists / minutes) * 90.0 : 0.0;
 
         SeasonalReport report = SeasonalReport.builder()
                 .player(player)
+                .league(league)
                 .seasonYear(seasonYear)
                 .minutesPlayed(minutes)
                 .goalsPer90(goalsPer90)

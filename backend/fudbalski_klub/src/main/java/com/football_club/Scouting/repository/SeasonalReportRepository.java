@@ -11,16 +11,20 @@ import java.util.Optional;
 
 @Repository
 public interface SeasonalReportRepository extends JpaRepository<SeasonalReport, Long> {
+
     List<SeasonalReport> findByPlayerId(Long playerId);
-    Optional<SeasonalReport> findByPlayerIdAndSeasonYear(Long playerId, Integer seasonYear);
-    boolean existsByPlayerIdAndSeasonYear(Long playerId, Integer seasonYear);
+
+    Optional<SeasonalReport> findByPlayerIdAndSeasonYearAndLeagueId(Long playerId, Integer seasonYear, Long leagueId);
+
+    boolean existsByPlayerIdAndSeasonYearAndLeagueId(Long playerId, Integer seasonYear, Long leagueId);
 
     @Query("""
         SELECT DISTINCT sr FROM SeasonalReport sr
+        JOIN FETCH sr.league
         LEFT JOIN FETCH sr.customMetrics cm
         LEFT JOIN FETCH cm.metric
         WHERE sr.player.id = :playerId
-        ORDER BY sr.seasonYear DESC
+        ORDER BY sr.seasonYear DESC, sr.minutesPlayed DESC
     """)
     List<SeasonalReport> findByPlayerIdWithMetrics(@Param("playerId") Long playerId);
 }

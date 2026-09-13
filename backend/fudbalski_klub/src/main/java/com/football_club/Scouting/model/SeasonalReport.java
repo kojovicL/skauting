@@ -8,7 +8,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "seasonal_reports", indexes = {
-        @Index(name = "idx_seasonal_player_year", columnList = "player_id, seasonYear")
+        @Index(name = "idx_seasonal_player_year_league", columnList = "player_id, seasonYear, league_id", unique = true)
 })
 @Getter
 @Setter
@@ -24,6 +24,10 @@ public class SeasonalReport {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "league_id", nullable = false)
+    private League league;
 
     @Column(nullable = false)
     private Integer seasonYear;
