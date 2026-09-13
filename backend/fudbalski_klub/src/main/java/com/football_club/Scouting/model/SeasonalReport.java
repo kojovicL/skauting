@@ -25,8 +25,8 @@ public class SeasonalReport {
     @JoinColumn(name = "player_id", nullable = false)
     private Player player;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "league_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "league_id", nullable = true)
     private League league;
 
     @Column(nullable = false)
@@ -43,6 +43,9 @@ public class SeasonalReport {
 
     @Column(nullable = false)
     private double avgWeightedRating;
+
+    @Column(columnDefinition = "TEXT")
+    private String seasonSummary;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
