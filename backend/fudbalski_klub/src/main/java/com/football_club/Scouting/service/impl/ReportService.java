@@ -155,6 +155,25 @@ public class ReportService implements IReportService {
             report.setWeightedRating(dto.getRawRating() * report.getLeagueMultiplierAtTime());
         }
 
+        // Sync updated metric values if provided in the update payload
+        if (dto.getMetrics() != null && !dto.getMetrics().isEmpty()) {
+            for (ValuedMetricSaveDTO metricDto : dto.getMetrics()) {
+                valuedMetricRepository.findByReportIdAndMetricId(report.getId(), metricDto.getMetricId())
+                        .ifPresentOrElse(
+                                existing -> existing.setValue(metricDto.getValue()),
+                                () -> {
+                                    Metric metric = metricRepository.findById(metricDto.getMetricId())
+                                            .orElseThrow(() -> new NoSuchElementException("Metrika nije pronađena."));
+                                    ValuedMetric vm = new ValuedMetric();
+                                    vm.setReport(report);
+                                    vm.setMetric(metric);
+                                    vm.setValue(metricDto.getValue());
+                                    valuedMetricRepository.save(vm);
+                                }
+                        );
+            }
+        }
+
         Report updatedReport = reportRepository.save(report);
         return mapToDTO(updatedReport);
     }
