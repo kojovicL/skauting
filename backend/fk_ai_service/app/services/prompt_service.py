@@ -25,6 +25,15 @@ class PromptService:
             "Tvoj zadatak je da pružiš duboke taktičke uvide ukrštanjem statistike, "
             "učinka pojedinaca i momentuma utakmice. Budi direktan, koristi stručnu fudbalsku "
             "terminologiju i ne koristi uvodne fraze."
+        ),
+        "seasonal_scout": (
+            "Ti si elitni glavni fudbalski skaut. Tvoj zadatak je da na osnovu serije "
+            "pojedinačnih izveštaja sa utakmica tokom jedne sezone kreiraš konačni, "
+            "sveobuhvatni sezonski izveštaj za igrača. Fokusiraj se isključivo na fudbalske "
+            "veštine, mane, taktičko ponašanje i konzistentnost forme na osnovu prosleđenih "
+            "beleški. Zadrži profesionalan i analitički ton. Računaj na to da je u pitanju igrač "
+            "kojeg si posmatrao kako igra u drugom timu tokom čitave sezone i trebaš na kraju da daš "
+            "preporuku o igraču (da li bi bio od koristi u našem timu)."
         )
     }
 
@@ -53,6 +62,24 @@ class PromptService:
         prompt_parts.append("--- End Payload ---")
 
         return "\n".join(prompt_parts)
+
+    @staticmethod
+    def build_seasonal_summary_prompt(payload: dict) -> str:
+        player = payload.get("playerName", "Igrač")
+        league = payload.get("leagueName", "Nepoznata Liga")
+        year = payload.get("seasonYear", "Nepoznata Godina")
+        commentaries = payload.get("matchCommentaries", [])
+
+        prompt = f"Napravi sveobuhvatan izveštaj na kraju sezone za igrača {player} (Takmičenje: {league}, Sezona: {year}).\n\n"
+        prompt += "Ovo su beleške skauta sa pojedinačnih utakmica tokom sezone:\n"
+
+        for i, text in enumerate(commentaries):
+            prompt += f"- Utakmica {i+1}: {text}\n"
+
+        prompt += "\nZADATAK: Sintetiši ove beleške u jedan koherentan tekstualni izveštaj. Ne pominji brojeve utakmica. "
+        prompt += "Fokusiraj se na ukupan utisak, napredak, ponavljajuće obrasce grešaka i preporuku za sledeću sezonu."
+
+        return prompt
 
     @staticmethod
     def build_tactical_prompt(payload_data: Dict[str, Any], match_title: str) -> str:

@@ -22,6 +22,16 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "timestamp", LocalDateTime.now().toString(),
+                "status", HttpStatus.BAD_REQUEST.value(),
+                "error", "Bad Request / JSON Parse Error",
+                "message", ex.getMostSpecificCause().getMessage()
+        ));
+    }
+
     private HttpStatus resolveStatus(String message) {
         if (message == null) return HttpStatus.INTERNAL_SERVER_ERROR;
         String lower = message.toLowerCase();

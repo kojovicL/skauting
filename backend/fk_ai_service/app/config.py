@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     DEFAULT_GEMINI_MODEL: str = "gemini-3.5-flash-lite"
     GEMINI_TEMPERATURE: float = 0.3
 
+    # --- RabbitMQ Settings ---
+    RABBITMQ_URL: str = "amqp://guest:guest@rabbitmq:5672/"
+
     # --- Pydantic Settings Configuration ---
     model_config = SettingsConfigDict(
         env_file=".env",

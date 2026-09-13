@@ -1,0 +1,30 @@
+-- ATTACKING & OUTPUT
+INSERT INTO metrics (name, category, type) VALUES ('Shots Total', 'ATTACKING_AND_OUTPUT', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Shots On Target', 'ATTACKING_AND_OUTPUT', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Dribble Attempts', 'ATTACKING_AND_OUTPUT', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Successful Dribbles', 'ATTACKING_AND_OUTPUT', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Penalties Won', 'ATTACKING_AND_OUTPUT', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Penalties Scored', 'ATTACKING_AND_OUTPUT', 'POSITIVE') ON CONFLICT DO NOTHING;
+
+-- PASSING & PROGRESSION
+INSERT INTO metrics (name, category, type) VALUES ('Total Passes', 'PASSING_AND_PROGRESSION', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Key Passes', 'PASSING_AND_PROGRESSION', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Pass Accuracy', 'PASSING_AND_PROGRESSION', 'POSITIVE') ON CONFLICT DO NOTHING;
+
+-- DEFENSIVE ACTIONS
+INSERT INTO metrics (name, category, type) VALUES ('Tackles', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Blocks', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Interceptions', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Total Duels', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Duels Won', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+
+-- GOALKEEPING (or DEFENSIVE_ACTIONS)
+INSERT INTO metrics (name, category, type) VALUES ('Saves', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Goals Conceded', 'IMPACT_AND_EFFICIENCY', 'NEGATIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Penalties Saved', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+
+-- IMPACT & EFFICIENCY (Discipline)
+INSERT INTO metrics (name, category, type) VALUES ('Fouls Drawn', 'IMPACT_AND_EFFICIENCY', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Fouls Committed', 'IMPACT_AND_EFFICIENCY', 'NEGATIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Yellow Cards', 'IMPACT_AND_EFFICIENCY', 'NEGATIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Red Cards', 'IMPACT_AND_EFFICIENCY', 'NEGATIVE') ON CONFLICT DO NOTHING;

@@ -2,17 +2,10 @@ package com.football_club.Scouting.service.impl;
 
 import com.football_club.Auth.model.User;
 import com.football_club.Auth.repository.UserRepository;
-import com.football_club.MatchTracking.model.Club;
-import com.football_club.MatchTracking.model.Player;
-import com.football_club.MatchTracking.repository.jpa.ClubRepository;
-import com.football_club.MatchTracking.repository.jpa.PlayerRepository;
-import com.football_club.Scouting.dto.ReportDTO;
-import com.football_club.Scouting.dto.ReportSaveDTO;
-import com.football_club.Scouting.dto.ValuedMetricDTO;
-import com.football_club.Scouting.model.Report;
+import com.football_club.Scouting.dto.*;
+import com.football_club.Scouting.model.*;
 import com.football_club.Scouting.model.enums.RequestStatus;
-import com.football_club.Scouting.repository.ReportRepository;
-import com.football_club.Scouting.repository.ScoutRequestRepository;
+import com.football_club.Scouting.repository.*;
 import com.football_club.Scouting.service.IReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -31,64 +24,117 @@ public class ReportService implements IReportService {
     private final ReportRepository reportRepository;
     private final PlayerRepository playerRepository;
     private final UserRepository userRepository;
-    private final ClubRepository clubRepository;
-    private final ScoutRequestRepository scoutRequestRepository;
+    private final MatchRepository matchRepository;
+    private final ApiMatchStatRepository apiMatchStatRepository;
+    private final MetricRepository metricRepository;
+    private final ValuedMetricRepository valuedMetricRepository;
+    private final NotificationRepository notificationRepository;
+    private final MonitoredPlayerRepository monitoredPlayerRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReportDraftDataDTO getReportDraftData(Long playerId, Long matchId) {
+        Player player = playerRepository.findById(playerId)
+                .orElseThrow(() -> new NoSuchElementException("Igrač nije pronađen."));
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new NoSuchElementException("Utakmica nije pronađena."));
+
+        ApiMatchStat apiStat = apiMatchStatRepository.findByPlayerIdAndMatchId(playerId, matchId).orElse(null);
+        List<Metric> systemMetrics = metricRepository.findAll();
+
+        return ReportDraftDataDTO.builder()
+                .match(ReportDraftDataDTO.MatchDraftInfo.builder()
+                        .matchId(match.getId())
+                        .date(match.getMatchDate())
+                        .status(match.getStatus())
+                        .homeTeamName(match.getHomeTeam().getName())
+                        .homeTeamLogo(match.getHomeTeam().getLogoUrl())
+                        .homeGoals(match.getHomeGoals())
+                        .awayTeamName(match.getAwayTeam().getName())
+                        .awayTeamLogo(match.getAwayTeam().getLogoUrl())
+                        .awayGoals(match.getAwayGoals())
+                        .leagueName(match.getLeague().getName())
+                        .difficultyMultiplier(match.getLeague().getDifficultyMultiplier())
+                        .build())
+                .player(ReportDraftDataDTO.PlayerDraftInfo.builder()
+                        .playerId(player.getId())
+                        .name(player.getName())
+                        .surname(player.getSurname())
+                        .photoUrl(player.getPhotoUrl())
+                        .currentTeamName(player.getCurrentTeam() != null ? player.getCurrentTeam().getName() : "Slobodan igrač")
+                        .build())
+                .apiStat(apiStat != null ? ReportDraftDataDTO.ApiMatchStatSummary.builder()
+                        .minutesPlayed(apiStat.getMinutesPlayed())
+                        .shirtNumber(apiStat.getShirtNumber())
+                        .isSubstitute(apiStat.getIsSubstitute())
+                        .isCaptain(apiStat.getIsCaptain())
+                        .goals(apiStat.getGoals())
+                        .assists(apiStat.getAssists())
+                        .rawRating(apiStat.getRawRating())
+                        .matchMetrics(apiStat.getMatchMetrics().stream()
+                                .map(m -> ReportDraftDataDTO.ApiValuedMetricDTO.builder()
+                                        .metricId(m.getMetric().getId())
+                                        .metricName(m.getMetric().getName())
+                                        .value(m.getValue())
+                                        .build())
+                                .collect(Collectors.toList()))
+                        .build() : null)
+                .allSystemMetrics(systemMetrics.stream()
+                        .map(m -> new MetricDTO(m.getId(), m.getName(), m.getCategory(), m.getType()))
+                        .collect(Collectors.toList()))
+                .build();
+    }
 
     @Override
     @Transactional
     public ReportDTO createReport(ReportSaveDTO dto, Long scoutId) {
         Player player = playerRepository.findById(dto.getPlayerId())
-                .orElseThrow(() -> new NoSuchElementException("Igrač nije pronađen sa ID-em: " + dto.getPlayerId()));
-
+                .orElseThrow(() -> new NoSuchElementException("Igrač nije pronađen."));
         User scout = userRepository.findById(scoutId)
-                .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen sa ID-em: " + scoutId));
+                .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen."));
+        Match match = matchRepository.findById(dto.getMatchId())
+                .orElseThrow(() -> new NoSuchElementException("Utakmica nije pronađena."));
 
-        Club club = null;
-        if (dto.getClubAtTimeId() != null) {
-            club = clubRepository.findById(dto.getClubAtTimeId())
-                    .orElseThrow(() -> new NoSuchElementException("Klub nije pronađen sa ID-em: " + dto.getClubAtTimeId()));
-        }
-
-        scoutRequestRepository.findByScoutIdAndPlayerIdAndStatusIn(
-                scoutId, 
-                player.getId(), 
-                List.of(RequestStatus.IN_PROGRESS)
-        ).ifPresent(request -> {
-            request.setStatus(RequestStatus.COMPLETED);
-            scoutRequestRepository.save(request);
-        });
-
-        double multiplier = 1.0;
-        if (club != null && club.getLeague() != null) {
-            multiplier = club.getLeague().getDifficultyMultiplier();
-        }
+        Team teamAtTime = player.getCurrentTeam();
+        double multiplier = match.getLeague().getDifficultyMultiplier();
+        double weightedRating = dto.getRawRating() != null ? dto.getRawRating() * multiplier : 0.0;
 
         Report report = new Report();
         report.setPlayer(player);
         report.setScout(scout);
-        report.setClubAtTime(club);
+        report.setMatch(match);
+        report.setTeamAtTime(teamAtTime);
         report.setCreatedAt(LocalDateTime.now());
         report.setOverallCommentary(dto.getOverallCommentary());
         report.setLeagueMultiplierAtTime(multiplier);
 
+        report.setMinutesPlayed(dto.getMinutesPlayed());
+        report.setShirtNumber(dto.getShirtNumber());
+        report.setIsSubstitute(dto.getIsSubstitute());
+        report.setIsCaptain(dto.getIsCaptain());
+        report.setGoals(dto.getGoals());
+        report.setAssists(dto.getAssists());
+        report.setRawRating(dto.getRawRating());
+        report.setWeightedRating(weightedRating);
+
         Report savedReport = reportRepository.save(report);
+
+        if (dto.getMetrics() != null && !dto.getMetrics().isEmpty()) {
+            for (ValuedMetricSaveDTO metricDto : dto.getMetrics()) {
+                Metric metric = metricRepository.findById(metricDto.getMetricId())
+                        .orElseThrow(() -> new NoSuchElementException("Metrika nije pronađena."));
+                ValuedMetric vm = new ValuedMetric();
+                vm.setReport(savedReport);
+                vm.setMetric(metric);
+                vm.setValue(metricDto.getValue());
+                valuedMetricRepository.save(vm);
+            }
+        }
+
+        // Automatically mark the related match notification as read
+        notificationRepository.markAsReadForReport(scoutId, player.getId(), match.getId());
+
         return mapToDTO(savedReport);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ReportDTO getReportById(Long id) {
-        Report report = reportRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Izveštaj sa ID-em " + id + " ne postoji."));
-        return mapToDTO(report);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ReportDTO> getAllReports() {
-        return reportRepository.findAll().stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -97,51 +143,70 @@ public class ReportService implements IReportService {
         Report report = reportRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Izveštaj sa ID-em " + id + " ne postoji."));
 
-        Player player = playerRepository.findById(dto.getPlayerId())
-                .orElseThrow(() -> new NoSuchElementException("Igrač nije pronađen sa ID-em: " + dto.getPlayerId()));
+        report.setOverallCommentary(dto.getOverallCommentary());
+        report.setMinutesPlayed(dto.getMinutesPlayed());
+        report.setShirtNumber(dto.getShirtNumber());
+        report.setIsSubstitute(dto.getIsSubstitute());
+        report.setIsCaptain(dto.getIsCaptain());
+        report.setGoals(dto.getGoals());
+        report.setAssists(dto.getAssists());
 
-        User scout = userRepository.findById(scoutId)
-                .orElseThrow(() -> new NoSuchElementException("Skaut nije pronađen sa ID-em: " + scoutId));
-
-        Club club = null;
-        if (dto.getClubAtTimeId() != null) {
-            club = clubRepository.findById(dto.getClubAtTimeId())
-                    .orElseThrow(() -> new NoSuchElementException("Klub nije pronađen sa ID-em: " + dto.getClubAtTimeId()));
+        if (dto.getRawRating() != null) {
+            report.setRawRating(dto.getRawRating());
+            report.setWeightedRating(dto.getRawRating() * report.getLeagueMultiplierAtTime());
         }
 
-        report.setPlayer(player);
-        report.setScout(scout);
-        report.setClubAtTime(club);
-        report.setOverallCommentary(dto.getOverallCommentary());
-        report.setLeagueMultiplierAtTime(dto.getLeagueMultiplierAtTime());
+        // Sync updated metric values if provided in the update payload
+        if (dto.getMetrics() != null && !dto.getMetrics().isEmpty()) {
+            for (ValuedMetricSaveDTO metricDto : dto.getMetrics()) {
+                valuedMetricRepository.findByReportIdAndMetricId(report.getId(), metricDto.getMetricId())
+                        .ifPresentOrElse(
+                                existing -> existing.setValue(metricDto.getValue()),
+                                () -> {
+                                    Metric metric = metricRepository.findById(metricDto.getMetricId())
+                                            .orElseThrow(() -> new NoSuchElementException("Metrika nije pronađena."));
+                                    ValuedMetric vm = new ValuedMetric();
+                                    vm.setReport(report);
+                                    vm.setMetric(metric);
+                                    vm.setValue(metricDto.getValue());
+                                    valuedMetricRepository.save(vm);
+                                }
+                        );
+            }
+        }
 
         Report updatedReport = reportRepository.save(report);
         return mapToDTO(updatedReport);
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public ReportDTO getReportById(Long id) {
+        return mapToDTO(reportRepository.findById(id).orElseThrow());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReportDTO> getAllReports() {
+        return reportRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void deleteReport(Long id) {
-        if (!reportRepository.existsById(id)) {
-            throw new NoSuchElementException("Neuspešno brisanje. Izveštaj sa ID-em " + id + " ne postoji.");
-        }
         reportRepository.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReportDTO> getReportsByScout(Long scoutId) {
-        return reportRepository.findByScoutId(scoutId).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return reportRepository.findByScoutId(scoutId).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ReportDTO> getReportsByPlayer(Long playerId) {
-        return reportRepository.findByPlayerIdWithMetrics(playerId).stream()
-                .map(this::mapToDTO)
-                .collect(Collectors.toList());
+        return reportRepository.findByPlayerIdWithMetrics(playerId).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
@@ -151,7 +216,7 @@ public class ReportService implements IReportService {
     }
 
     private ReportDTO mapToDTO(Report report) {
-        List<ValuedMetricDTO> metrics = report.getValuedMetrics() != null ? 
+        List<ValuedMetricDTO> metrics = report.getValuedMetrics() != null ?
                 report.getValuedMetrics().stream()
                         .map(vm -> ValuedMetricDTO.builder()
                                 .id(vm.getId())
@@ -171,10 +236,93 @@ public class ReportService implements IReportService {
                 .scoutUsername(report.getScout().getUsername())
                 .createdAt(report.getCreatedAt())
                 .overallCommentary(report.getOverallCommentary())
-                .clubAtTimeId(report.getClubAtTime() != null ? report.getClubAtTime().getId() : null)
-                .clubAtTimeName(report.getClubAtTime() != null ? report.getClubAtTime().getName() : null)
+                .teamAtTimeId(report.getTeamAtTime() != null ? report.getTeamAtTime().getId() : null)
+                .teamAtTimeName(report.getTeamAtTime() != null ? report.getTeamAtTime().getName() : null)
                 .leagueMultiplierAtTime(report.getLeagueMultiplierAtTime())
+                .matchId(report.getMatch() != null ? report.getMatch().getId() : null)
+                .homeTeamName(report.getMatch() != null ? report.getMatch().getHomeTeam().getName() : null)
+                .awayTeamName(report.getMatch() != null ? report.getMatch().getAwayTeam().getName() : null)
+                .minutesPlayed(report.getMinutesPlayed())
+                .shirtNumber(report.getShirtNumber())
+                .isSubstitute(report.getIsSubstitute())
+                .isCaptain(report.getIsCaptain())
+                .goals(report.getGoals())
+                .assists(report.getAssists())
+                .rawRating(report.getRawRating())
+                .weightedRating(report.getWeightedRating())
                 .valuedMetrics(metrics)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PendingReportMatchDTO> getPendingMatchesForScout(Long scoutId) {
+        return apiMatchStatRepository.findPendingUnreportedMatchesForScout(scoutId).stream()
+                .map(stat -> PendingReportMatchDTO.builder()
+                        .matchId(stat.getMatch().getId())
+                        .matchDate(stat.getMatch().getMatchDate())
+                        .homeTeamName(stat.getMatch().getHomeTeam().getName())
+                        .homeTeamLogo(stat.getMatch().getHomeTeam().getLogoUrl())
+                        .homeGoals(stat.getMatch().getHomeGoals())
+                        .awayTeamName(stat.getMatch().getAwayTeam().getName())
+                        .awayTeamLogo(stat.getMatch().getAwayTeam().getLogoUrl())
+                        .awayGoals(stat.getMatch().getAwayGoals())
+                        .leagueName(stat.getMatch().getLeague().getName())
+                        .playerId(stat.getPlayer().getId())
+                        .playerName(stat.getPlayer().getName())
+                        .playerSurname(stat.getPlayer().getSurname())
+                        .playerPhotoUrl(stat.getPlayer().getPhotoUrl())
+                        .playerPosition(stat.getPlayer().getPosition() != null ? stat.getPlayer().getPosition().name() : null)
+                        .minutesPlayed(stat.getMinutesPlayed())
+                        .rating(stat.getRawRating())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UpcomingMatchTaskDTO> getUpcomingMatchTasksForScout(Long scoutId) {
+        List<MonitoredPlayer> scoutPlayers = monitoredPlayerRepository.findActiveByScoutId(scoutId);
+
+        if (scoutPlayers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Extract unique team IDs for all the scout's assigned players
+        List<Long> teamIds = scoutPlayers.stream()
+                .map(MonitoredPlayer::getTeamId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Fetch all upcoming matches involving those teams
+        List<Match> upcomingMatches = matchRepository.findUpcomingMatchesForTeams(teamIds);
+
+        // Map and group players into their corresponding upcoming matches
+        return upcomingMatches.stream().map(match -> {
+            List<UpcomingMatchTaskDTO.ScoutMatchPlayerDTO> playingMonitoredPlayers = scoutPlayers.stream()
+                    .filter(mp -> mp.getTeamId().equals(match.getHomeTeam().getId()) ||
+                            mp.getTeamId().equals(match.getAwayTeam().getId()))
+                    .map(mp -> UpcomingMatchTaskDTO.ScoutMatchPlayerDTO.builder()
+                            .playerId(mp.getPlayer().getId())
+                            .name(mp.getPlayer().getName())
+                            .surname(mp.getPlayer().getSurname())
+                            .photoUrl(mp.getPlayer().getPhotoUrl())
+                            .teamName(mp.getTeamId().equals(match.getHomeTeam().getId())
+                                    ? match.getHomeTeam().getName()
+                                    : match.getAwayTeam().getName())
+                            .build())
+                    .collect(Collectors.toList());
+
+            return UpcomingMatchTaskDTO.builder()
+                    .matchId(match.getId())
+                    .matchDate(match.getMatchDate())
+                    .homeTeamName(match.getHomeTeam().getName())
+                    .homeTeamLogo(match.getHomeTeam().getLogoUrl())
+                    .awayTeamName(match.getAwayTeam().getName())
+                    .awayTeamLogo(match.getAwayTeam().getLogoUrl())
+                    .leagueName(match.getLeague().getName())
+                    .players(playingMonitoredPlayers)
+                    .build();
+        }).collect(Collectors.toList());
     }
 }

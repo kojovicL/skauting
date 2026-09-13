@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -37,7 +38,8 @@ public class WebSecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService());
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
         authProvider.setPasswordEncoder(passwordEncoder());
 
         return authProvider;
@@ -50,6 +52,18 @@ public class WebSecurityConfig {
 
     @Autowired
     public RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                "/v3/api-docs",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html",
+                "/webjars/**",
+                "/favicon.ico"
+        );
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, TokenUtils tokenUtils) throws Exception {
@@ -71,6 +85,7 @@ public class WebSecurityConfig {
                         "/images/**",
                         "/static/**",
                         "/v3/api-docs/**",
+                        "/v3/api-docs",
                         "/swagger-ui/**",
                         "/swagger-ui.html"
                 ).permitAll()
