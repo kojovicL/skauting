@@ -75,6 +75,7 @@ public class SeasonalReportService implements ISeasonalReportService {
                         .category(cm.getMetric().getCategory())
                         .type(cm.getMetric().getType())
                         .aggregatedValue(cm.getAggregatedValue())
+                        .percentile(cm.getPercentile()) // Added mapping
                         .build())
                 .collect(Collectors.toList())
                 : Collections.emptyList();

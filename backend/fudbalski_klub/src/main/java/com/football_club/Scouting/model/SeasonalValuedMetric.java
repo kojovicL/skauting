@@ -28,4 +28,7 @@ public class SeasonalValuedMetric {
 
     @Column(nullable = false)
     private double aggregatedValue; // Average or normalized seasonal score for this metric
+
+    @Column(name = "percentile", nullable = true)
+    private Double percentile;
 }

@@ -6,6 +6,7 @@ import com.football_club.Scouting.model.*;
 import com.football_club.Scouting.repository.ReportRepository;
 import com.football_club.Scouting.repository.SeasonRepository;
 import com.football_club.Scouting.repository.SeasonalReportRepository;
+import com.football_club.Scouting.repository.SeasonalValuedMetricRepository;
 import com.football_club.Scouting.service.DateTimeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,10 +27,11 @@ public class SeasonalReportCronService {
     private final SeasonRepository seasonRepository;
     private final ReportRepository reportRepository;
     private final SeasonalReportRepository seasonalReportRepository;
+    private final SeasonalValuedMetricRepository seasonalValuedMetricRepository;
     private final DateTimeService dateTimeService;
     private final RabbitTemplate rabbitTemplate;
 
-    @Scheduled(cron = "0 0 3 * * *") // Runs daily at 3:00 AM
+    @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void generateEndOfSeasonReports() {
         LocalDate today = dateTimeService.getCurrentDate();
@@ -38,6 +40,23 @@ public class SeasonalReportCronService {
         for (Season season : endedSeasons) {
             log.info("Generating seasonal reports for Season ID: {}", season.getId());
             processSeasonReports(season);
+
+            // Trigger percentile recalculation for this newly closed season
+            seasonalValuedMetricRepository.updatePercentilesForSeason(season.getYear());
+            log.info("Percentiles updated for season {}", season.getYear());
+        }
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = Long.MAX_VALUE) // Runs once, 10 seconds after startup
+    @Transactional
+    public void backfillMissingPercentiles() {
+        List<Integer> seasonsWithNulls = seasonalValuedMetricRepository.findSeasonYearsWithMissingPercentiles();
+        if (!seasonsWithNulls.isEmpty()) {
+            log.info("Found {} seasons with missing percentiles. Starting backfill...", seasonsWithNulls.size());
+            for (Integer year : seasonsWithNulls) {
+                int updated = seasonalValuedMetricRepository.updatePercentilesForSeason(year);
+                log.info("Backfilled percentiles for season {}. Rows updated: {}", year, updated);
+            }
         }
     }
 

@@ -16,4 +16,5 @@ public class SeasonalValuedMetricDTO {
     private MetricCategory category;
     private MetricType type;
     private double aggregatedValue;
+    private Double percentile;
 }

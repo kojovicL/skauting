@@ -24,10 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -112,6 +109,8 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
 
         player.setNationalTeam(nationalTeam);
         Player savedPlayer = playerRepository.save(player);
+        Set<Integer> affectedSeasons = new HashSet<>();
+        affectedSeasons.add(targetSeason);
 
         for (Statistic stat : primaryData.getStatistics()) {
             if (stat.getLeague() != null && stat.getLeague().getId() != null && getMinutesPlayed(stat) > 0) {
@@ -121,7 +120,12 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
             }
         }
 
-        backfillPreviousSeasons(savedPlayer, targetSeason, 2);
+        affectedSeasons.addAll(backfillPreviousSeasons(savedPlayer, targetSeason, 2));
+
+        // Update percentiles for all seasons touched during onboarding
+        for (Integer year : affectedSeasons) {
+            seasonalValuedMetricRepository.updatePercentilesForSeason(year);
+        }
 
         // Record full career transfer and contract history
         recordPlayerContracts(savedPlayer);
@@ -271,7 +275,8 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         });
     }
 
-    private void backfillPreviousSeasons(Player player, int currentSeason, int seasonsToBackfill) {
+    private Set<Integer> backfillPreviousSeasons(Player player, int currentSeason, int seasonsToBackfill) {
+        Set<Integer> backfilledSeasons = new HashSet<>();
         for (int i = 1; i <= seasonsToBackfill; i++) {
             int pastSeason = currentSeason - i;
             try {
@@ -284,6 +289,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
                                 League pastLeague = resolveLeague(stat.getLeague());
                                 double pastMultiplier = pastLeague != null ? pastLeague.getDifficultyMultiplier() : 1.0;
                                 createHistoricalSeasonalReport(player, pastSeason, stat, pastLeague, pastMultiplier);
+                                backfilledSeasons.add(pastSeason);
                             }
                         }
                     }
@@ -292,6 +298,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
                 log.warn("Nisu pronađeni podaci za igrača {} za sezonu {}: {}", player.getId(), pastSeason, e.getMessage());
             }
         }
+        return backfilledSeasons;
     }
 
     private int getMinutesPlayed(Statistic stat) {

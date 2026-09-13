@@ -27,4 +27,15 @@ public interface SeasonalReportRepository extends JpaRepository<SeasonalReport, 
         ORDER BY sr.seasonYear DESC, sr.minutesPlayed DESC
     """)
     List<SeasonalReport> findByPlayerIdWithMetrics(@Param("playerId") Long playerId);
+
+    @Query("""
+        SELECT sr FROM SeasonalReport sr 
+        JOIN FETCH sr.player p 
+        JOIN FETCH sr.league l 
+        LEFT JOIN FETCH sr.customMetrics cm 
+        LEFT JOIN FETCH cm.metric 
+        WHERE p.position = :position 
+          AND sr.seasonYear = (SELECT MAX(sr2.seasonYear) FROM SeasonalReport sr2 WHERE sr2.player.id = p.id)
+    """)
+    List<SeasonalReport> findLatestByPositionWithMetrics(@Param("position") com.football_club.Scouting.model.enums.Position position);
 }
