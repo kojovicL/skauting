@@ -14,7 +14,6 @@ import java.util.List;
 public interface MonitoredPlayerRepository extends JpaRepository<MonitoredPlayer, Long> {
     List<MonitoredPlayer> findByCampaignId(Long campaignId);
     List<MonitoredPlayer> findByPlayerId(Long playerId);
-
     boolean existsByCampaignIdAndPlayerId(Long campaignId, Long playerId);
 
     @Modifying
@@ -24,4 +23,13 @@ public interface MonitoredPlayerRepository extends JpaRepository<MonitoredPlayer
 
     @Query("SELECT mp FROM MonitoredPlayer mp JOIN FETCH mp.campaign c JOIN FETCH mp.player p WHERE c.status = 'ACTIVE'")
     List<MonitoredPlayer> findAllActiveMonitoredPlayers();
+
+    @Query("""
+        SELECT mp FROM MonitoredPlayer mp 
+        JOIN FETCH mp.player p 
+        JOIN FETCH mp.campaign c 
+        WHERE mp.scout.id = :scoutId 
+          AND c.status = com.football_club.Scouting.model.enums.CampaignStatus.ACTIVE
+    """)
+    List<MonitoredPlayer> findActiveByScoutId(@Param("scoutId") Long scoutId);
 }

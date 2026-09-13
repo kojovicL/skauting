@@ -1,9 +1,6 @@
 package com.football_club.Scouting.service;
 
-import com.football_club.Scouting.dto.PendingReportMatchDTO;
-import com.football_club.Scouting.dto.ReportDTO;
-import com.football_club.Scouting.dto.ReportDraftDataDTO;
-import com.football_club.Scouting.dto.ReportSaveDTO;
+import com.football_club.Scouting.dto.*;
 
 import java.util.List;
 
@@ -18,4 +15,5 @@ public interface IReportService {
     List<ReportDTO> getReportsByPlayer(Long playerId);
     ReportDTO getLatestReportByPlayer(Long playerId);
     List<PendingReportMatchDTO> getPendingMatchesForScout(Long scoutId);
+    List<UpcomingMatchTaskDTO> getUpcomingMatchTasksForScout(Long scoutId);
 }

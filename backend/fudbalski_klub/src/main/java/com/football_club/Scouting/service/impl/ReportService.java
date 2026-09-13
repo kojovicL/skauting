@@ -29,6 +29,7 @@ public class ReportService implements IReportService {
     private final MetricRepository metricRepository;
     private final ValuedMetricRepository valuedMetricRepository;
     private final NotificationRepository notificationRepository;
+    private final MonitoredPlayerRepository monitoredPlayerRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -276,5 +277,52 @@ public class ReportService implements IReportService {
                         .rating(stat.getRawRating())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UpcomingMatchTaskDTO> getUpcomingMatchTasksForScout(Long scoutId) {
+        List<MonitoredPlayer> scoutPlayers = monitoredPlayerRepository.findActiveByScoutId(scoutId);
+
+        if (scoutPlayers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Extract unique team IDs for all the scout's assigned players
+        List<Long> teamIds = scoutPlayers.stream()
+                .map(MonitoredPlayer::getTeamId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        // Fetch all upcoming matches involving those teams
+        List<Match> upcomingMatches = matchRepository.findUpcomingMatchesForTeams(teamIds);
+
+        // Map and group players into their corresponding upcoming matches
+        return upcomingMatches.stream().map(match -> {
+            List<UpcomingMatchTaskDTO.ScoutMatchPlayerDTO> playingMonitoredPlayers = scoutPlayers.stream()
+                    .filter(mp -> mp.getTeamId().equals(match.getHomeTeam().getId()) ||
+                            mp.getTeamId().equals(match.getAwayTeam().getId()))
+                    .map(mp -> UpcomingMatchTaskDTO.ScoutMatchPlayerDTO.builder()
+                            .playerId(mp.getPlayer().getId())
+                            .name(mp.getPlayer().getName())
+                            .surname(mp.getPlayer().getSurname())
+                            .photoUrl(mp.getPlayer().getPhotoUrl())
+                            .teamName(mp.getTeamId().equals(match.getHomeTeam().getId())
+                                    ? match.getHomeTeam().getName()
+                                    : match.getAwayTeam().getName())
+                            .build())
+                    .collect(Collectors.toList());
+
+            return UpcomingMatchTaskDTO.builder()
+                    .matchId(match.getId())
+                    .matchDate(match.getMatchDate())
+                    .homeTeamName(match.getHomeTeam().getName())
+                    .homeTeamLogo(match.getHomeTeam().getLogoUrl())
+                    .awayTeamName(match.getAwayTeam().getName())
+                    .awayTeamLogo(match.getAwayTeam().getLogoUrl())
+                    .leagueName(match.getLeague().getName())
+                    .players(playingMonitoredPlayers)
+                    .build();
+        }).collect(Collectors.toList());
     }
 }

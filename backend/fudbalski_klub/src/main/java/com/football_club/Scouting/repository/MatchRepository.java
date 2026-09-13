@@ -74,4 +74,15 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
           AND m.status = :status
     """)
     List<Match> findMatchesByTeamAndStatus(@Param("teamId") Long teamId, @Param("status") String status);
+
+    @Query("""
+        SELECT DISTINCT m FROM Match m
+        JOIN FETCH m.homeTeam
+        JOIN FETCH m.awayTeam
+        JOIN FETCH m.league
+        WHERE m.status = 'SCHEDULED'
+          AND (m.homeTeam.id IN :teamIds OR m.awayTeam.id IN :teamIds)
+        ORDER BY m.matchDate ASC
+    """)
+    List<Match> findUpcomingMatchesForTeams(@Param("teamIds") List<Long> teamIds);
 }

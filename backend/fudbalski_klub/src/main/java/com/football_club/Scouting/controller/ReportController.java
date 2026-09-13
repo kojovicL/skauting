@@ -1,10 +1,7 @@
 package com.football_club.Scouting.controller;
 
 import com.football_club.Auth.model.User;
-import com.football_club.Scouting.dto.PendingReportMatchDTO;
-import com.football_club.Scouting.dto.ReportDTO;
-import com.football_club.Scouting.dto.ReportDraftDataDTO;
-import com.football_club.Scouting.dto.ReportSaveDTO;
+import com.football_club.Scouting.dto.*;
 import com.football_club.Scouting.service.IReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -117,5 +114,11 @@ public class ReportController {
     @PreAuthorize("hasAnyRole('SCOUT', 'ADMIN')")
     public ResponseEntity<List<PendingReportMatchDTO>> getPendingMatches(@AuthenticationPrincipal User userDetails) {
         return ResponseEntity.ok(reportService.getPendingMatchesForScout(userDetails.getId()));
+    }
+
+    @GetMapping("/upcoming-tasks")
+    @PreAuthorize("hasAnyRole('SCOUT', 'ADMIN')")
+    public ResponseEntity<List<UpcomingMatchTaskDTO>> getUpcomingTasks(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(reportService.getUpcomingMatchTasksForScout(userDetails.getId()));
     }
 }
