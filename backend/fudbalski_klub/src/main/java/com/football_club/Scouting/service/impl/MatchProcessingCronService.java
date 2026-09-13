@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import com.football_club.Scouting.dto.NotificationDTO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -42,6 +44,7 @@ public class MatchProcessingCronService {
     private final TeamRepository teamRepository;
     private final LeagueRepository leagueRepository;
     private final SeasonRepository seasonRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Scheduled(cron = "0 0 2 * * *") // Runs every day at 2 AM
     public void processDailyMatches() {
@@ -240,7 +243,22 @@ public class MatchProcessingCronService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        notificationRepository.save(notification);
+        Notification savedNotification = notificationRepository.save(notification);
+
+        // Map to DTO to prevent lazy loading issues over WebSockets
+        NotificationDTO dto = NotificationDTO.builder()
+                .id(savedNotification.getId())
+                .scoutId(savedNotification.getScout().getId())
+                .playerId(savedNotification.getPlayerId())
+                .matchId(savedNotification.getMatchId())
+                .title(savedNotification.getTitle())
+                .message(savedNotification.getMessage())
+                .isRead(savedNotification.isRead())
+                .createdAt(savedNotification.getCreatedAt())
+                .build();
+
+        // Push real-time notification to the specific scout's topic
+        messagingTemplate.convertAndSend("/topic/scout/" + mp.getScout().getId() + "/notifications", dto);
     }
 
     private League resolveLeague(com.football_club.dto.apifootball.fixtures.League apiLeague) {

@@ -28,6 +28,7 @@ public class ReportService implements IReportService {
     private final ApiMatchStatRepository apiMatchStatRepository;
     private final MetricRepository metricRepository;
     private final ValuedMetricRepository valuedMetricRepository;
+    private final NotificationRepository notificationRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -117,12 +118,10 @@ public class ReportService implements IReportService {
 
         Report savedReport = reportRepository.save(report);
 
-        // Bulk insert the metrics evaluated by the scout
         if (dto.getMetrics() != null && !dto.getMetrics().isEmpty()) {
             for (ValuedMetricSaveDTO metricDto : dto.getMetrics()) {
                 Metric metric = metricRepository.findById(metricDto.getMetricId())
                         .orElseThrow(() -> new NoSuchElementException("Metrika nije pronađena."));
-
                 ValuedMetric vm = new ValuedMetric();
                 vm.setReport(savedReport);
                 vm.setMetric(metric);
@@ -131,10 +130,11 @@ public class ReportService implements IReportService {
             }
         }
 
+        // Automatically mark the related match notification as read
+        notificationRepository.markAsReadForReport(scoutId, player.getId(), match.getId());
+
         return mapToDTO(savedReport);
     }
-
-    // Keep existing methods: getReportById, getAllReports, deleteReport, getReportsByScout...
 
     @Override
     @Transactional
