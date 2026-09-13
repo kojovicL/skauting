@@ -1,6 +1,7 @@
 package com.football_club.Scouting.dto;
 
 import com.football_club.Scouting.model.enums.CampaignStatus;
+import com.football_club.Scouting.model.enums.Region;
 import com.football_club.Scouting.model.enums.Position;
 import lombok.*;
 import java.time.LocalDate;
@@ -18,6 +19,7 @@ public class CampaignDetailsDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private Long directorId;
+    private Region region;
     private List<MonitoredPlayerBasicDTO> monitoredPlayers;
 
     @Getter

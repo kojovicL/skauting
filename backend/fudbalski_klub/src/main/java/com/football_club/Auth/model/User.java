@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.football_club.Scouting.model.enums.Region;
 
 import java.util.Collection;
 import java.util.List;
@@ -44,11 +45,12 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false)
     private RoleEnum role;
 
-    @Column(name = "club_id")
-    private Integer clubId;
-
     @OneToMany(mappedBy = "scout", cascade = CascadeType.ALL)
     private List<Report> reports;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "region", nullable = true)
+    private Region region;
 
     @Override
     public boolean isEnabled() {

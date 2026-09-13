@@ -1,6 +1,7 @@
 package com.football_club.Auth.dto;
 
 import com.football_club.Auth.model.RoleEnum;
+import com.football_club.Scouting.model.enums.Region;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -37,5 +38,5 @@ public class UserDTO {
 
     private boolean isActive;
 
-    private Integer clubId;
+    private Region region;
 }

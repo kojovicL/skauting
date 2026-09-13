@@ -5,9 +5,9 @@ import com.football_club.Auth.dto.RegisterDTO;
 import com.football_club.Auth.dto.UserDTO;
 import com.football_club.Auth.service.IUserService;
 import com.football_club.Auth.model.RoleEnum;
+import com.football_club.Scouting.model.enums.Region;
 import com.football_club.Auth.model.User;
 import com.football_club.Auth.repository.UserRepository;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -52,7 +52,7 @@ public class UserService implements IUserService, UserDetailsService {
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
         user.setRole(userDTO.getRole());
         user.setActive(true);
-        user.setClubId(userDTO.getClubId());
+        user.setRegion(userDTO.getRegion());
 
         User savedUser = userRepository.save(user);
         return mapToDTO(savedUser);
@@ -145,6 +145,18 @@ public class UserService implements IUserService, UserDetailsService {
         userRepository.save(user);
     }
 
+    @Override
+    @Transactional
+    public void assignRegionToScout(Long scoutId, Region region) {
+        User user = userRepository.findById(scoutId)
+                .orElseThrow(() -> new RuntimeException("Korisnik nije pronađen."));
+        if (user.getRole() != RoleEnum.ROLE_SCOUT) {
+            throw new RuntimeException("Korisnik nije skaut.");
+        }
+        user.setRegion(region);
+        userRepository.save(user);
+    }
+
     private UserDTO mapToDTO(User user) {
         return UserDTO.builder()
                 .id(user.getId())
@@ -154,8 +166,8 @@ public class UserService implements IUserService, UserDetailsService {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .isActive(user.isActive())
-                .clubId(user.getClubId())
                 .password(null)
+                .region(user.getRegion())
                 .build();
     }
 }

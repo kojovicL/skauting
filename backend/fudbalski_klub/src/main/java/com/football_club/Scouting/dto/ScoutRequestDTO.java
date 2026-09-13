@@ -1,6 +1,7 @@
 package com.football_club.Scouting.dto;
 
 import com.football_club.Scouting.model.enums.Position;
+import com.football_club.Scouting.model.enums.Region;
 import com.football_club.Scouting.model.enums.RequestStatus;
 import lombok.*;
 
@@ -27,4 +28,5 @@ public class ScoutRequestDTO {
     private RequestStatus status;
     private Long scoutId;
     private String scoutUsername;
+    private Region region;
 }

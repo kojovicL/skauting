@@ -3,6 +3,7 @@ package com.football_club.Scouting.model;
 import com.football_club.Auth.model.User;
 import com.football_club.Scouting.model.enums.CampaignStatus;
 import com.football_club.Scouting.model.enums.Position;
+import com.football_club.Scouting.model.enums.Region;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -36,6 +37,10 @@ public class Campaign {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private CampaignStatus status = CampaignStatus.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true, length = 50)
+    private Region region = Region.GLOBAL;
 
     @Column(nullable = false)
     private LocalDate startDate = LocalDate.now();

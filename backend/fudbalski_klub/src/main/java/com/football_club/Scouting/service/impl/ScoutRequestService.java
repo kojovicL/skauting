@@ -7,6 +7,7 @@ import com.football_club.Scouting.dto.ScoutRequestDTO;
 import com.football_club.Scouting.model.MonitoredPlayer;
 import com.football_club.Scouting.model.Player;
 import com.football_club.Scouting.model.ScoutRequest;
+import com.football_club.Scouting.model.enums.Region;
 import com.football_club.Scouting.model.enums.RequestStatus;
 import com.football_club.Scouting.repository.MonitoredPlayerRepository;
 import com.football_club.Scouting.repository.ScoutRequestRepository;
@@ -29,8 +30,27 @@ public class ScoutRequestService implements IScoutRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ScoutRequestDTO> getPendingRequests() {
+    public List<ScoutRequestDTO> getPendingRequestsForUser(User user) {
+        if (user.getRole() == RoleEnum.ROLE_SCOUT) {
+            if (user.getRegion() == null) {
+                return List.of(); // Unassigned scouts see nothing
+            }
+            if (user.getRegion() != Region.GLOBAL) {
+                return scoutRequestRepository.findByRegionAndStatusWithDetails(user.getRegion(), RequestStatus.PENDING).stream()
+                        .map(this::mapToDTO)
+                        .collect(Collectors.toList());
+            }
+        }
+        // Admin, Sports Director, or GLOBAL scout sees all pending requests
         return scoutRequestRepository.findByStatusWithDetails(RequestStatus.PENDING).stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ScoutRequestDTO> getRequestsByRegion(Region region) {
+        return scoutRequestRepository.findByRegionWithDetails(region).stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
@@ -65,9 +85,14 @@ public class ScoutRequestService implements IScoutRequestService {
         User scout = userRepository.findById(scoutId)
                 .orElseThrow(() -> new NoSuchElementException("Korisnik sa ID-em " + scoutId + " nije pronađen."));
 
-        // Validation: Verify user has the SCOUT or ADMIN role
-        if (scout.getRole() != RoleEnum.ROLE_SCOUT && scout.getRole() != RoleEnum.ROLE_ADMIN) {
-            throw new IllegalArgumentException("Samo skauti mogu preuzimati zahteve za posmatranje.");
+        if (scout.getRole() == RoleEnum.ROLE_SCOUT) {
+            if (scout.getRegion() == null) {
+                throw new IllegalStateException("Nemate dodeljen region. Kontaktirajte direktora.");
+            }
+            // Block claiming if neither the scout nor the request is GLOBAL, and the regions mismatch
+            if (scout.getRegion() != Region.GLOBAL && request.getRegion() != Region.GLOBAL && scout.getRegion() != request.getRegion()) {
+                throw new IllegalStateException("Ne možete preuzeti zahtev izvan vašeg regiona (" + scout.getRegion() + ").");
+            }
         }
 
         MonitoredPlayer monitoredPlayer = request.getMonitoredPlayer();
@@ -118,6 +143,7 @@ public class ScoutRequestService implements IScoutRequestService {
                 .status(request.getStatus())
                 .scoutId(assignedScout != null ? assignedScout.getId() : null)
                 .scoutUsername(assignedScout != null ? assignedScout.getUsername() : null)
+                .region(request.getRegion())
                 .build();
     }
 }

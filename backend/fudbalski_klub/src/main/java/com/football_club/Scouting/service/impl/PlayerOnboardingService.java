@@ -115,6 +115,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
             ScoutRequest scoutRequest = ScoutRequest.builder()
                     .campaign(campaign)
                     .monitoredPlayer(savedMp)
+                    .region(campaign.getRegion())
                     .requestDate(savedMp.getAddedAt())
                     .status(RequestStatus.PENDING)
                     .build();

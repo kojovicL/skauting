@@ -7,12 +7,12 @@ import com.football_club.Auth.dto.UserTokenState;
 import com.football_club.Auth.model.User;
 import com.football_club.Auth.service.impl.UserService;
 import com.football_club.Auth.utils.TokenUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.football_club.Scouting.model.enums.Region;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -41,7 +41,7 @@ public class AuthController {
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
             User user = (User) authentication.getPrincipal();
-            String jwt = tokenUtils.createToken(user.getUsername(), user.getRole(), user.getId(), user.getClubId());
+            String jwt = tokenUtils.createToken(user.getUsername(), user.getRole(), user.getId());
             
             return ResponseEntity.ok(new UserTokenState(jwt, tokenUtils.getExpiredIn()));
 
@@ -59,5 +59,12 @@ public class AuthController {
         UserDTO user = this.userService.registerUser(request);
 
         return ResponseEntity.ok("Registration successful.");
+    }
+
+    @PatchMapping("/scouts/{id}/region")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<String> setScoutRegion(@PathVariable Long id, @RequestParam Region region) {
+        userService.assignRegionToScout(id, region);
+        return ResponseEntity.ok("Region uspešno dodeljen skautu.");
     }
 }

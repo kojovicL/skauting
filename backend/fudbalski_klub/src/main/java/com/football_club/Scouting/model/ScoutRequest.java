@@ -1,6 +1,7 @@
 package com.football_club.Scouting.model;
 
 import com.football_club.Scouting.model.enums.RequestStatus;
+import com.football_club.Scouting.model.enums.Region;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,6 +30,11 @@ public class ScoutRequest {
 
     @Column(name = "request_date", nullable = false)
     private LocalDate requestDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true, length = 50)
+    @Builder.Default
+    private Region region = Region.GLOBAL;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)

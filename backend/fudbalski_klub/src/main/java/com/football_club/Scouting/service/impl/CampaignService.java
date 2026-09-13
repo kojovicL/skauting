@@ -11,6 +11,9 @@ import com.football_club.Scouting.service.ICampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.football_club.Scouting.model.enums.Region;
+import com.football_club.Scouting.service.IPlayerOnboardingService;
+import com.football_club.Scouting.dto.OnboardPlayerRequest;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,21 +24,37 @@ import java.util.NoSuchElementException;
 public class CampaignService implements ICampaignService {
 
     private final CampaignRepository campaignRepository;
+    private final IPlayerOnboardingService playerOnboardingService;
 
     @Override
     @Transactional
-    public Campaign createCampaign(CampaignSaveDTO campaign, User owner) {
+    public Campaign createCampaign(CampaignSaveDTO campaignDto, User owner) {
         Campaign campaignEntity = new Campaign();
-        campaignEntity.setName(campaign.getName());
-        campaignEntity.setDescription(campaign.getDescription());
-        campaignEntity.setTargetPosition(campaign.getTargetPosition());
-        campaignEntity.setEndDate(campaign.getEndDate());
-        if (campaign.getStartDate() != null && !campaign.getStartDate().isEqual(LocalDate.now())) {
-            campaignEntity.setStartDate(campaign.getStartDate());
+        campaignEntity.setName(campaignDto.getName());
+        campaignEntity.setDescription(campaignDto.getDescription());
+        campaignEntity.setTargetPosition(campaignDto.getTargetPosition());
+        campaignEntity.setEndDate(campaignDto.getEndDate());
+        campaignEntity.setRegion(campaignDto.getRegion() != null ? campaignDto.getRegion() : Region.GLOBAL);
+
+        if (campaignDto.getStartDate() != null && !campaignDto.getStartDate().isEqual(LocalDate.now())) {
+            campaignEntity.setStartDate(campaignDto.getStartDate());
             campaignEntity.setStatus(CampaignStatus.PENDING);
         }
         campaignEntity.setDirector(owner);
-        return campaignRepository.save(campaignEntity);
+        Campaign savedCampaign = campaignRepository.save(campaignEntity);
+
+        // Auto-onboard candidates explicitly requested by Director
+        if (campaignDto.getCandidateApiIds() != null && !campaignDto.getCandidateApiIds().isEmpty()) {
+            for (Long apiId : campaignDto.getCandidateApiIds()) {
+                try {
+                    OnboardPlayerRequest req = new OnboardPlayerRequest(apiId, savedCampaign.getId(), null);
+                    playerOnboardingService.onboardPlayer(req, owner);
+                } catch (Exception e) {
+                    throw new RuntimeException("Neuspešno dodavanje kandidata " + apiId + ": " + e.getMessage(), e);
+                }
+            }
+        }
+        return savedCampaign;
     }
 
     @Override
@@ -100,6 +119,7 @@ public class CampaignService implements ICampaignService {
                 .startDate(campaign.getStartDate())
                 .endDate(campaign.getEndDate())
                 .directorId(campaign.getDirector().getId())
+                .region(campaign.getRegion())
                 .monitoredPlayers(players)
                 .build();
     }

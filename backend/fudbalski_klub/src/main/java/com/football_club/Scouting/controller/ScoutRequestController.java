@@ -2,6 +2,7 @@ package com.football_club.Scouting.controller;
 
 import com.football_club.Auth.model.User;
 import com.football_club.Scouting.dto.ScoutRequestDTO;
+import com.football_club.Scouting.model.enums.Region;
 import com.football_club.Scouting.service.IScoutRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,8 +21,14 @@ public class ScoutRequestController {
 
     @GetMapping("/pending")
     @PreAuthorize("hasAnyRole('SCOUT', 'SPORTS_DIRECTOR', 'ADMIN')")
-    public ResponseEntity<List<ScoutRequestDTO>> getPendingRequests() {
-        return ResponseEntity.ok(scoutRequestService.getPendingRequests());
+    public ResponseEntity<List<ScoutRequestDTO>> getPendingRequests(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(scoutRequestService.getPendingRequestsForUser(userDetails));
+    }
+
+    @GetMapping("/region/{region}")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<List<ScoutRequestDTO>> getRequestsByRegion(@PathVariable Region region) {
+        return ResponseEntity.ok(scoutRequestService.getRequestsByRegion(region));
     }
 
     @GetMapping

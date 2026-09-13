@@ -1,6 +1,8 @@
 package com.football_club.Scouting.dto;
 
 import com.football_club.Scouting.model.enums.Position;
+import com.football_club.Scouting.model.enums.Region;
+import java.util.List;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -16,4 +18,6 @@ public class CampaignSaveDTO {
     private Position targetPosition;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Region region;
+    private List<Long> candidateApiIds;
 }

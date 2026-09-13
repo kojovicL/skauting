@@ -40,7 +40,7 @@ public class TokenUtils {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    public String createToken(String username, RoleEnum role, Long id, Integer clubId) {
+    public String createToken(String username, RoleEnum role, Long id) {
         return Jwts.builder()
                 .setHeaderParam("typ", "JWT")
                 .setIssuer(APP_NAME)
@@ -49,7 +49,6 @@ public class TokenUtils {
                 .setIssuedAt(new Date())
                 .claim("key", id)
                 .claim("role", role.toString())
-                .claim("clubId", clubId)
                 .setExpiration(generateExpirationDate())
                 .signWith(getSigningKey(), SIGNATURE_ALGORITHM)
                 .compact();
