@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,22 +47,33 @@ public class MatchProcessingCronService {
     private final SeasonRepository seasonRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    @Scheduled(cron = "0 0 2 * * *") // Runs every day at 2 AM
+    @Scheduled(cron = "0 0 2 * * *")
     public void processDailyMatches() {
         log.info("Starting daily match processing cron job...");
         LocalDate yesterday = dateTimeService.getYesterday();
         LocalDate nextWeek = dateTimeService.getInSevenDays();
         Integer currentSeason = dateTimeService.getCurrentSeasonYear();
 
-        // 1. Fetch active monitored players and group by team to minimize API requests
         List<MonitoredPlayer> activePlayers = monitoredPlayerRepository.findAllActiveMonitoredPlayers();
-        Map<Long, List<MonitoredPlayer>> playersByTeam = activePlayers.stream()
-                .collect(Collectors.groupingBy(MonitoredPlayer::getTeamId));
 
+        // Create a custom Map instead of using Collectors.groupingBy
+        Map<Long, List<MonitoredPlayer>> playersByTeam = new HashMap<>();
+
+        for (MonitoredPlayer mp : activePlayers) {
+            // Group by Club Team
+            if (mp.getTeamId() != null && mp.getTeamId() > 0) {
+                playersByTeam.computeIfAbsent(mp.getTeamId(), k -> new ArrayList<>()).add(mp);
+            }
+            // Group by National Team
+            if (mp.getNationalTeamId() != null && mp.getNationalTeamId() > 0) {
+                playersByTeam.computeIfAbsent(mp.getNationalTeamId(), k -> new ArrayList<>()).add(mp);
+            }
+        }
+
+        // The rest of the loop remains entirely unchanged
         for (Map.Entry<Long, List<MonitoredPlayer>> entry : playersByTeam.entrySet()) {
             Long teamId = entry.getKey();
             List<MonitoredPlayer> teamPlayers = entry.getValue();
-
             try {
                 processTeamFixtures(teamId, teamPlayers, yesterday, nextWeek, currentSeason);
             } catch (Exception e) {

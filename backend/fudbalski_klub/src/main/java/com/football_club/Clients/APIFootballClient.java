@@ -112,4 +112,11 @@ public class APIFootballClient {
             return null;
         }
     }
+
+    public TeamSearch getTeamById(Long id) {
+        return restClient.get()
+                .uri("/teams?id={id}", id)
+                .retrieve()
+                .body(TeamSearch.class);
+    }
 }

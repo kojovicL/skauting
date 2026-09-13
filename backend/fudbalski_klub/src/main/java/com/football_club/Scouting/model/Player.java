@@ -46,6 +46,10 @@ public class Player {
     @JoinColumn(name = "current_team_id")
     private Team currentTeam;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "national_team_id")
+    private Team nationalTeam;
+
     // Active campaign links tracking this player
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MonitoredPlayer> monitoredInstances = new ArrayList<>();

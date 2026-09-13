@@ -37,5 +37,8 @@ public class MonitoredPlayer {
     @Column(nullable = false)
     private Long teamId;
 
+    @Column(name = "national_team_id", nullable = true)
+    private Long nationalTeamId;
+
     private LocalDate addedAt = LocalDate.now();
 }

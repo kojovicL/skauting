@@ -91,6 +91,26 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
             player.setPosition(Position.fromApiString(primaryStat.getGames().getPosition()));
         }
         player.setCurrentTeam(currentTeam);
+        Team nationalTeam = null;
+        for (Statistic stat : primaryData.getStatistics()) {
+            // Check if it's an international competition
+            if (stat.getLeague() != null && "World".equalsIgnoreCase(stat.getLeague().getCountry())) {
+                if (stat.getTeam() != null && stat.getTeam().getId() != null) {
+                    Team potentialNationalTeam = resolveTeamWithNationalCheck(
+                            stat.getTeam().getId().longValue(),
+                            stat.getTeam().getName(),
+                            stat.getTeam().getLogo()
+                    );
+
+                    if (potentialNationalTeam.isNational()) {
+                        nationalTeam = potentialNationalTeam;
+                        break; // Stop searching once we find their national squad
+                    }
+                }
+            }
+        }
+
+        player.setNationalTeam(nationalTeam);
         Player savedPlayer = playerRepository.save(player);
 
         for (Statistic stat : primaryData.getStatistics()) {
@@ -110,6 +130,7 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         mp.setPlayer(savedPlayer);
         mp.setCampaign(campaign);
         mp.setTeamId(currentTeam != null ? currentTeam.getId() : 0L);
+        mp.setNationalTeamId(nationalTeam != null ? nationalTeam.getId() : null); // Track national team
         mp.setAddedAt(LocalDate.now());
 
         if (currentUser != null && currentUser.getRole() == RoleEnum.ROLE_SCOUT) {
@@ -130,6 +151,33 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
 
             return savedMp;
         }
+    }
+
+    private Team resolveTeamWithNationalCheck(Long teamId, String name, String logo) {
+        if (teamId == null) return null;
+
+        // Return immediately if it's already in the database (0 API calls)
+        return teamRepository.findById(teamId).orElseGet(() -> {
+            Team t = new Team();
+            t.setId(teamId);
+            t.setName(name != null ? name : "Unknown Team");
+            t.setLogoUrl(logo);
+
+            try {
+                // Fetch from API to determine the national flag since it's missing from DB
+                com.football_club.dto.apifootball.teamsearch.TeamSearch teamData = apiClient.getTeamById(teamId);
+                if (teamData != null && teamData.getResponse() != null && !teamData.getResponse().isEmpty()) {
+                    t.setNational(teamData.getResponse().get(0).getTeam().getNational());
+                } else {
+                    t.setNational(false);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch team details for team ID: {}", teamId, e);
+                t.setNational(false);
+            }
+
+            return teamRepository.save(t);
+        });
     }
 
     private void recordPlayerContracts(Player player) {
