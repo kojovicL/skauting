@@ -3,10 +3,13 @@ package com.football_club.Scouting.service.impl;
 import com.football_club.Auth.model.User;
 import com.football_club.Scouting.dto.CampaignDetailsDTO;
 import com.football_club.Scouting.dto.CampaignSaveDTO;
+import com.football_club.Scouting.dto.PlayerRecommendationDTO;
 import com.football_club.Scouting.model.Campaign;
 import com.football_club.Scouting.model.Player;
+import com.football_club.Scouting.model.SeasonalReport;
 import com.football_club.Scouting.model.enums.CampaignStatus;
 import com.football_club.Scouting.repository.CampaignRepository;
+import com.football_club.Scouting.repository.SeasonalReportRepository;
 import com.football_club.Scouting.service.ICampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,8 +19,8 @@ import com.football_club.Scouting.service.IPlayerOnboardingService;
 import com.football_club.Scouting.dto.OnboardPlayerRequest;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +28,7 @@ public class CampaignService implements ICampaignService {
 
     private final CampaignRepository campaignRepository;
     private final IPlayerOnboardingService playerOnboardingService;
+    private final SeasonalReportRepository seasonalReportRepository;
 
     @Override
     @Transactional
@@ -122,5 +126,61 @@ public class CampaignService implements ICampaignService {
                 .region(campaign.getRegion())
                 .monitoredPlayers(players)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PlayerRecommendationDTO> getCampaignRecommendations(Long campaignId) {
+        Campaign campaign = campaignRepository.findById(campaignId)
+                .orElseThrow(() -> new NoSuchElementException("Kampanja sa ID-em " + campaignId + " nije pronađena."));
+
+        List<Long> playerIds = campaign.getMonitoredPlayers().stream()
+                .map(mp -> mp.getPlayer().getId())
+                .collect(Collectors.toList());
+
+        if (playerIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<SeasonalReport> latestReports = seasonalReportRepository.findLatestForPlayersWithMetrics(playerIds);
+
+        // Handle edge cases where a player has multiple reports for the same max year
+        Map<Long, SeasonalReport> primaryReportsMap = new HashMap<>();
+        for (SeasonalReport report : latestReports) {
+            Long pId = report.getPlayer().getId();
+            if (!primaryReportsMap.containsKey(pId) || report.getMinutesPlayed() > primaryReportsMap.get(pId).getMinutesPlayed()) {
+                primaryReportsMap.put(pId, report);
+            }
+        }
+
+        List<PlayerRecommendationDTO> recommendations = new ArrayList<>();
+
+        for (SeasonalReport report : primaryReportsMap.values()) {
+            double totalPercentile = 0.0;
+            int metricCount = 0;
+
+            for (com.football_club.Scouting.model.SeasonalValuedMetric vm : report.getCustomMetrics()) {
+                if (vm.getPercentile() != null) {
+                    totalPercentile += vm.getPercentile();
+                    metricCount++;
+                }
+            }
+
+            // Average the percentiles, then multiply by league difficulty to get the final score
+            double averagePercentile = metricCount > 0 ? (totalPercentile / metricCount) : 0.0;
+            double finalScore = averagePercentile * report.getLeague().getDifficultyMultiplier();
+
+            recommendations.add(new PlayerRecommendationDTO(
+                    report.getPlayer().getId(),
+                    report.getPlayer().getName(),
+                    report.getPlayer().getSurname(),
+                    finalScore,
+                    "CAMPAIGN_AVERAGE"
+            ));
+        }
+
+        return recommendations.stream()
+                .sorted(Comparator.comparingDouble(PlayerRecommendationDTO::getScore).reversed())
+                .collect(Collectors.toList());
     }
 }

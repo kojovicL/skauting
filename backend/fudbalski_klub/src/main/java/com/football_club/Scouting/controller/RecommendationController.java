@@ -34,7 +34,7 @@ public class RecommendationController {
                 request.getMetricWeights()
                         .stream()
                         .collect(Collectors
-                                .toMap(RecommendationRequestDTO.WeightedMetrics::getMetricdId,
+                                .toMap(RecommendationRequestDTO.WeightedMetrics::getMetricId,
                                         RecommendationRequestDTO.WeightedMetrics::getWeight))
         );
         return ResponseEntity.ok(result);

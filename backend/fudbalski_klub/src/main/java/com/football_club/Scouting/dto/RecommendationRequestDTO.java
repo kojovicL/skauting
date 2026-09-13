@@ -21,7 +21,7 @@ public class RecommendationRequestDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class WeightedMetrics {
-        private Long metricdId;
+        private Long metricId;
         private Double weight;
     }
 }
