@@ -209,6 +209,11 @@ public class MatchProcessingCronService {
         if (stat.getPenalty() != null) {
             addMetric("Penalties Won", stat.getPenalty().getWon(), savedStat, metricMap, valuedMetrics);
             addMetric("Penalties Scored", stat.getPenalty().getScored(), savedStat, metricMap, valuedMetrics);
+            addMetric("Penalties Saved", stat.getPenalty().getSaved(), savedStat, metricMap, valuedMetrics);
+        }
+        if (stat.getGoals() != null) {
+            addMetric("Saves", stat.getGoals().getSaves(), savedStat, metricMap, valuedMetrics);
+            addMetric("Goals Conceded", stat.getGoals().getConceded(), savedStat, metricMap, valuedMetrics);
         }
 
         apiMatchValuedMetricRepository.saveAll(valuedMetrics);

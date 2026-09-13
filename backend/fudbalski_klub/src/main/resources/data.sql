@@ -18,6 +18,11 @@ INSERT INTO metrics (name, category, type) VALUES ('Interceptions', 'DEFENSIVE_A
 INSERT INTO metrics (name, category, type) VALUES ('Total Duels', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
 INSERT INTO metrics (name, category, type) VALUES ('Duels Won', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
 
+-- GOALKEEPING (or DEFENSIVE_ACTIONS)
+INSERT INTO metrics (name, category, type) VALUES ('Saves', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Goals Conceded', 'IMPACT_AND_EFFICIENCY', 'NEGATIVE') ON CONFLICT DO NOTHING;
+INSERT INTO metrics (name, category, type) VALUES ('Penalties Saved', 'DEFENSIVE_ACTIONS', 'POSITIVE') ON CONFLICT DO NOTHING;
+
 -- IMPACT & EFFICIENCY (Discipline)
 INSERT INTO metrics (name, category, type) VALUES ('Fouls Drawn', 'IMPACT_AND_EFFICIENCY', 'POSITIVE') ON CONFLICT DO NOTHING;
 INSERT INTO metrics (name, category, type) VALUES ('Fouls Committed', 'IMPACT_AND_EFFICIENCY', 'NEGATIVE') ON CONFLICT DO NOTHING;

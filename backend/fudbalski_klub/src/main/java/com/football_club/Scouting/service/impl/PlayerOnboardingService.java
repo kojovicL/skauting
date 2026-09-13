@@ -346,6 +346,11 @@ public class PlayerOnboardingService implements IPlayerOnboardingService {
         if (apiStat.getPenalty() != null) {
             addMetric("Penalties Won", apiStat.getPenalty().getWon(), report, metricMap, valuedMetrics);
             addMetric("Penalties Scored", apiStat.getPenalty().getScored(), report, metricMap, valuedMetrics);
+            addMetric("Penalties Saved", apiStat.getPenalty().getSaved(), report, metricMap, valuedMetrics);
+        }
+        if (apiStat.getGoals() != null) {
+            addMetric("Saves", apiStat.getGoals().getSaves(), report, metricMap, valuedMetrics);
+            addMetric("Goals Conceded", apiStat.getGoals().getConceded(), report, metricMap, valuedMetrics);
         }
 
         seasonalValuedMetricRepository.saveAll(valuedMetrics);
