@@ -42,4 +42,10 @@ public class CampaignController {
     public ResponseEntity<List<PlayerRecommendationDTO>> getCampaignRecommendations(@PathVariable Long id) {
         return ResponseEntity.ok(campaignService.getCampaignRecommendations(id));
     }
+
+    @GetMapping("/my/active")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<List<CampaignDetailsDTO>> getMyActiveCampaigns(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(campaignService.getMyActiveCampaignsDetails(userDetails.getId()));
+    }
 }

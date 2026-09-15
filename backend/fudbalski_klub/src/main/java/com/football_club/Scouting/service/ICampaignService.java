@@ -15,4 +15,5 @@ public interface ICampaignService {
     void deleteCampaign(Long id);
     CampaignDetailsDTO getCampaignDetailsById(Long id);
     List<PlayerRecommendationDTO> getCampaignRecommendations(Long campaignId);
+    List<CampaignDetailsDTO> getMyActiveCampaignsDetails(Long directorId);
 }

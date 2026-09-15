@@ -96,11 +96,26 @@ public class CampaignService implements ICampaignService {
         campaignRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CampaignDetailsDTO> getMyActiveCampaignsDetails(Long directorId) {
+        // Fetch campaigns by director and filter only the active ones
+        return campaignRepository.findByDirectorId(directorId).stream()
+                .filter(c -> c.getStatus() == CampaignStatus.ACTIVE)
+                .map(this::mapToCampaignDetailsDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Refactor your existing getCampaignDetailsById to use this helper
     @Transactional(readOnly = true)
     public CampaignDetailsDTO getCampaignDetailsById(Long id) {
         Campaign campaign = campaignRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Kampanja nije pronađena."));
+        return mapToCampaignDetailsDTO(campaign);
+    }
 
+    // New private helper method extracted from your original code
+    private CampaignDetailsDTO mapToCampaignDetailsDTO(Campaign campaign) {
         List<CampaignDetailsDTO.MonitoredPlayerBasicDTO> players = campaign.getMonitoredPlayers().stream()
                 .map(mp -> {
                     Player p = mp.getPlayer();
@@ -118,7 +133,7 @@ public class CampaignService implements ICampaignService {
                 .id(campaign.getId())
                 .name(campaign.getName())
                 .description(campaign.getDescription())
-                .targetPosition(campaign.getTargetPosition())
+                .targetPosition(campaign.getTargetPosition().getDisplayName())
                 .status(campaign.getStatus())
                 .startDate(campaign.getStartDate())
                 .endDate(campaign.getEndDate())
@@ -183,4 +198,6 @@ public class CampaignService implements ICampaignService {
                 .sorted(Comparator.comparingDouble(PlayerRecommendationDTO::getScore).reversed())
                 .collect(Collectors.toList());
     }
+
+
 }
