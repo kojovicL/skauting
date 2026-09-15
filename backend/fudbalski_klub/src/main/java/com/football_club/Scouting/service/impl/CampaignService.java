@@ -53,6 +53,7 @@ public class CampaignService implements ICampaignService {
                 try {
                     OnboardPlayerRequest req = new OnboardPlayerRequest(apiId, savedCampaign.getId(), null);
                     playerOnboardingService.onboardPlayer(req, owner);
+
                 } catch (Exception e) {
                     throw new RuntimeException("Neuspešno dodavanje kandidata " + apiId + ": " + e.getMessage(), e);
                 }

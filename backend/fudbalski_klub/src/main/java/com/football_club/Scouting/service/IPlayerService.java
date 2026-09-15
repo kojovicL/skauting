@@ -9,4 +9,5 @@ public interface IPlayerService {
     List<Player> getAllPlayers();
     Player updatePlayer(Long id, Player player);
     void deletePlayer(Long id);
+    List<Player> searchPlayers(String surname);
 }

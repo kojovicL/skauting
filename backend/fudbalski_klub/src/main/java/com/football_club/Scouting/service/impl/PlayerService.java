@@ -57,4 +57,10 @@ public class PlayerService implements IPlayerService {
         }
         playerRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Player> searchPlayers(String surname) {
+        return playerRepository.searchBySurnameOrName(surname);
+    }
 }
