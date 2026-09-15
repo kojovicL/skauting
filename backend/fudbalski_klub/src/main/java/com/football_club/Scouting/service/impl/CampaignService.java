@@ -9,6 +9,7 @@ import com.football_club.Scouting.model.Player;
 import com.football_club.Scouting.model.SeasonalReport;
 import com.football_club.Scouting.model.enums.CampaignStatus;
 import com.football_club.Scouting.repository.CampaignRepository;
+import com.football_club.Scouting.repository.ScoutRequestRepository;
 import com.football_club.Scouting.repository.SeasonalReportRepository;
 import com.football_club.Scouting.service.ICampaignService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class CampaignService implements ICampaignService {
     private final CampaignRepository campaignRepository;
     private final IPlayerOnboardingService playerOnboardingService;
     private final SeasonalReportRepository seasonalReportRepository;
+    private final ScoutRequestRepository scoutRequestRepository;
 
     @Override
     @Transactional
@@ -64,6 +66,23 @@ public class CampaignService implements ICampaignService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<CampaignDetailsDTO> getMyCompletedCampaignsDetails(Long directorId) {
+        return campaignRepository.findByDirectorId(directorId).stream()
+                .filter(c -> c.getStatus() == CampaignStatus.COMPLETED)
+                .map(this::mapToCampaignDetailsDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void endCampaign(Long id) {
+        Campaign campaign = getCampaignById(id);
+        campaign.setStatus(CampaignStatus.COMPLETED);
+        campaignRepository.save(campaign);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Campaign getCampaignById(Long id) {
         return campaignRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Kampanja sa ID-em " + id + " nije pronađena."));
@@ -94,6 +113,7 @@ public class CampaignService implements ICampaignService {
         if (!campaignRepository.existsById(id)) {
             throw new NoSuchElementException("Kampanja sa ID-em " + id + " ne postoji.");
         }
+        scoutRequestRepository.deleteByCampaignId(id);
         campaignRepository.deleteById(id);
     }
 
