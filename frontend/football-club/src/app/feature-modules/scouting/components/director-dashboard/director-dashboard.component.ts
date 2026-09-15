@@ -20,15 +20,22 @@ export interface CandidatePlayer {
   styleUrls: ['./director-dashboard.component.css']
 })
 export class DirectorDashboardComponent implements OnInit {
+  activeTab: 'ACTIVE' | 'COMPLETED' = 'ACTIVE';
   campaigns: CampaignDetails[] = [];
   pageMap: { [campaignId: number]: number } = {};
   pageSize: number = 5;
 
   // Modal & Form State
   isModalOpen: boolean = false;
+  isEditMode: boolean = false;
+  editingCampaignId: number | null = null;
   campaignForm!: FormGroup;
+
+  // Confirmation Modal State
+  showConfirmModal: boolean = false;
+  confirmAction: 'DELETE' | 'END' | null = null;
+  selectedCampaignId: number | null = null;
   
-  // Enums for dropdowns
   positions = ['STRIKER', 'LW', 'RW', 'CAM', 'CM', 'CDM', 'LWB', 'RWB', 'LB', 'RB', 'CB', 'GK'];
   regions = ['EUROPE', 'SOUTH_AMERICA', 'NORTH_AMERICA', 'AFRICA', 'ASIA', 'OCEANIA', 'GLOBAL'];
 
@@ -52,8 +59,8 @@ export class DirectorDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.fetchActiveCampaigns();
     this.initForm();
+    this.loadCampaigns();
   }
 
   initForm(): void {
@@ -67,19 +74,34 @@ export class DirectorDashboardComponent implements OnInit {
     });
   }
 
-  fetchActiveCampaigns(): void {
-    this.campaignService.getMyActiveCampaigns().subscribe({
-      next: (data) => {
-        this.campaigns = data;
-        this.campaigns.forEach(campaign => {
-          this.pageMap[campaign.id] = 1;
-        });
-      },
-      error: (err) => console.error('Greška pri učitavanju kampanja', err)
+  // --- Tab & Data Loading Logic ---
+  switchTab(tab: 'ACTIVE' | 'COMPLETED'): void {
+    this.activeTab = tab;
+    this.loadCampaigns();
+  }
+
+  loadCampaigns(): void {
+    if (this.activeTab === 'ACTIVE') {
+      this.campaignService.getMyActiveCampaigns().subscribe({
+        next: (data) => this.setupCampaigns(data),
+        error: (err) => console.error('Greška pri učitavanju aktivnih kampanja', err)
+      });
+    } else {
+      this.campaignService.getMyCompletedCampaigns().subscribe({
+        next: (data) => this.setupCampaigns(data),
+        error: (err) => console.error('Greška pri učitavanju završenih kampanja', err)
+      });
+    }
+  }
+
+  setupCampaigns(data: CampaignDetails[]): void {
+    this.campaigns = data;
+    this.campaigns.forEach(campaign => {
+      this.pageMap[campaign.id] = 1;
     });
   }
 
-  // Dashboard Pagination Methods
+  // --- Pagination Logic ---
   getPaginatedPlayers(campaignId: number, players: MonitoredPlayerBasic[]): MonitoredPlayerBasic[] {
     const currentPage = this.pageMap[campaignId] || 1;
     const startIndex = (currentPage - 1) * this.pageSize;
@@ -91,8 +113,7 @@ export class DirectorDashboardComponent implements OnInit {
   }
 
   nextPage(campaignId: number, totalItems: number): void {
-    const maxPage = this.getTotalPages(totalItems);
-    if (this.pageMap[campaignId] < maxPage) {
+    if (this.pageMap[campaignId] < this.getTotalPages(totalItems)) {
       this.pageMap[campaignId]++;
     }
   }
@@ -103,8 +124,10 @@ export class DirectorDashboardComponent implements OnInit {
     }
   }
 
-  // --- Modal & Campaign Creation Logic ---
-  openModal(): void {
+  // --- Modal & Campaign Action Logic ---
+  openCreateModal(): void {
+    this.isEditMode = false;
+    this.editingCampaignId = null;
     this.initForm();
     this.selectedCandidates = [];
     this.searchResults = [];
@@ -113,39 +136,99 @@ export class DirectorDashboardComponent implements OnInit {
     this.isModalOpen = true;
   }
 
+  openEditModal(campaign: CampaignDetails): void {
+    this.isEditMode = true;
+    this.editingCampaignId = campaign.id;
+    
+    this.campaignForm.patchValue({
+      name: campaign.name,
+      description: campaign.description,
+      targetPosition: this.mapToPositionEnum(campaign.targetPosition),
+      startDate: campaign.startDate,
+      endDate: campaign.endDate,
+      region: campaign.region || 'GLOBAL'
+    });
+    
+    this.isModalOpen = true;
+  }
+
   closeModal(): void {
     this.isModalOpen = false;
   }
 
-  createCampaign(): void {
+  saveCampaign(): void {
     if (this.campaignForm.invalid) {
       this.campaignForm.markAllAsTouched();
       return;
     }
 
     const formValues = this.campaignForm.value;
-    const newCampaign: CampaignSave = {
+    const campaignData: CampaignSave = {
       name: formValues.name,
       description: formValues.description,
       targetPosition: formValues.targetPosition,
       startDate: formValues.startDate,
       endDate: formValues.endDate,
       region: formValues.region,
-      candidateApiIds: this.selectedCandidates.map(c => c.id)
+      candidateApiIds: this.isEditMode ? [] : this.selectedCandidates.map(c => c.id)
     };
 
-    console.log('Kreiranje kampanje sa podacima:', newCampaign);
-
-    this.campaignService.createCampaign(newCampaign).subscribe({
-      next: () => {
-        this.closeModal();
-        this.fetchActiveCampaigns(); // Refresh the list
-      },
-      error: (err) => console.error('Greška pri kreiranju kampanje', err)
-    });
+    if (this.isEditMode && this.editingCampaignId) {
+      this.campaignService.updateCampaign(this.editingCampaignId, campaignData).subscribe({
+        next: () => {
+          this.closeModal();
+          this.loadCampaigns();
+        },
+        error: (err) => console.error('Greška pri izmeni kampanje', err)
+      });
+    } else {
+      this.campaignService.createCampaign(campaignData).subscribe({
+        next: () => {
+          this.closeModal();
+          this.loadCampaigns();
+        },
+        error: (err) => console.error('Greška pri kreiranju kampanje', err)
+      });
+    }
   }
 
-  // --- Search Logic ---
+  // --- Confirmation Modals ---
+  openConfirmModal(action: 'DELETE' | 'END', campaignId: number, event: Event): void {
+    event.stopPropagation();
+    this.confirmAction = action;
+    this.selectedCampaignId = campaignId;
+    this.showConfirmModal = true;
+  }
+
+  closeConfirmModal(): void {
+    this.showConfirmModal = false;
+    this.confirmAction = null;
+    this.selectedCampaignId = null;
+  }
+
+  executeConfirmAction(): void {
+    if (!this.selectedCampaignId || !this.confirmAction) return;
+
+    if (this.confirmAction === 'DELETE') {
+      this.campaignService.deleteCampaign(this.selectedCampaignId).subscribe({
+        next: () => {
+          this.closeConfirmModal();
+          this.loadCampaigns();
+        },
+        error: (err) => console.error('Greška pri brisanju kampanje', err)
+      });
+    } else if (this.confirmAction === 'END') {
+      this.campaignService.endCampaign(this.selectedCampaignId).subscribe({
+        next: () => {
+          this.closeConfirmModal();
+          this.loadCampaigns();
+        },
+        error: (err) => console.error('Greška pri završavanju kampanje', err)
+      });
+    }
+  }
+
+  // --- Search Logic (Unchanged but adapted) ---
   setSearchMode(mode: 'LOCAL' | 'API'): void {
     this.searchMode = mode;
     this.searchResults = [];
@@ -154,7 +237,6 @@ export class DirectorDashboardComponent implements OnInit {
 
   executeSearch(): void {
     if (!this.searchQuery.trim()) return;
-
     this.isSearching = true;
     this.searchPage = 1;
 
@@ -191,7 +273,6 @@ export class DirectorDashboardComponent implements OnInit {
     }
   }
 
-  // --- Search Pagination ---
   get paginatedSearchResults(): CandidatePlayer[] {
     const startIndex = (this.searchPage - 1) * this.searchPageSize;
     return this.searchResults.slice(startIndex, startIndex + this.searchPageSize);
@@ -209,12 +290,11 @@ export class DirectorDashboardComponent implements OnInit {
     if (this.searchPage > 1) this.searchPage--;
   }
 
-  // --- Candidate Management ---
   addCandidate(player: CandidatePlayer): void {
     if (!this.selectedCandidates.some(c => c.id === player.id)) {
       this.selectedCandidates.push(player);
-      this.searchResults = []
-      this.searchQuery = ''
+      this.searchResults = [];
+      this.searchQuery = '';
     }
   }
 
@@ -224,5 +304,16 @@ export class DirectorDashboardComponent implements OnInit {
 
   toggleCandidatesCollapse(): void {
     this.isCandidatesCollapsed = !this.isCandidatesCollapsed;
+  }
+
+  private mapToPositionEnum(displayString: string): string {
+    const map: any = {
+      'Striker': 'ST', 'Left Winger': 'LW', 'Right Winger': 'RW', 
+      'Attacking Midfielder': 'CAM', 'Central Midfielder': 'CM', 
+      'Defensive Midfielder': 'CDM', 'Left Wing-Back': 'LWB', 
+      'Right Wing-Back': 'RWB', 'Left-Back': 'LB', 
+      'Right-Back': 'RB', 'Center-Back': 'CB', 'Goalkeeper': 'GK'
+    };
+    return map[displayString] || displayString;
   }
 }

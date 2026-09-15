@@ -26,4 +26,20 @@ export class CampaignService {
   getMyActiveCampaigns(): Observable<CampaignDetails[]> {
     return this.http.get<CampaignDetails[]>(`${this.baseUrl}/my/active`);
   }
+
+  getMyCompletedCampaigns(): Observable<CampaignDetails[]> {
+    return this.http.get<CampaignDetails[]>(`${this.baseUrl}/my/completed`);
+  }
+
+  updateCampaign(id: number, campaign: CampaignSave): Observable<void> {
+    return this.http.put<void>(`${this.baseUrl}/${id}`, campaign);
+  }
+
+  deleteCampaign(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  endCampaign(id: number): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/${id}/end`, {});
+  }
 }

@@ -485,3 +485,114 @@
   justify-content: flex-end;
   gap: 1rem;
 }
+
+/* Tabs Styling */
+.tab-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #6c757d;
+  padding: 0.8rem 1.5rem;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.tab-btn:hover {
+  color: #3498db;
+}
+
+.tab-btn.active {
+  color: #3498db;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #3498db;
+  border-radius: 3px 3px 0 0;
+}
+
+/* Card Header actions and descriptions */
+.header-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-action {
+  background: white;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #495057;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+}
+
+.btn-action:hover { background: #f8f9fa; }
+.btn-action.edit:hover { border-color: #3498db; color: #3498db; }
+.btn-action.end:hover { border-color: #27ae60; color: #27ae60; }
+.btn-action.delete:hover { border-color: #e74c3c; color: #e74c3c; }
+
+.campaign-description {
+  margin: 0.5rem 0 1rem 0;
+  color: #6c757d;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Specific styling for Confirm Modal */
+.confirm-modal {
+  max-width: 450px;
+}
+
+.confirm-body {
+  padding: 1.5rem;
+  font-size: 1.05rem;
+  color: #2c3e50;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
