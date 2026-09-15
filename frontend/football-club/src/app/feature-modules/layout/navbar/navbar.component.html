@@ -2,30 +2,7 @@
   <div class="navbar-brand" (click)="onLogoClicked()">
     Fudbalski Klub
   </div>
-
-  <div class="navbar-actions">
-    <ng-container *ngIf="isLoggedIn && (isHeadCoach || isAssistantCoach)">
-      <button class="nav-btn" (click)="router.navigate(['/clubs'])">Klub i Roster</button>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && isAssistantCoach">
-      <button class="nav-btn" (click)="router.navigate(['/add-player'])">Dodavanje igrača</button>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && (isHeadCoach || isAssistantCoach || isStatistician)">
-      <div class="dropdown">
-        <button class="nav-btn">Mečevi ▾</button>
-        <div class="dropdown-content">
-          <a (click)="router.navigate(['/matches'])">Odigrani mečevi</a>
-          <a (click)="router.navigate(['/upcoming-matches'])">Predstojeći mečevi</a>
-        </div>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && (isHeadCoach || isStatistician)">
-      <button class="nav-btn" (click)="router.navigate(['/live-match-finder'])">Utakmica uživo</button>
-    </ng-container>
-
+  <div>
     <ng-container *ngIf="(isLoggedIn && userRole === 'ROLE_SCOUT')">
       <button class="nav-btn" (click)="onReportsClick()">Izveštaji</button>
       <button class="nav-btn" (click)="onRequestsClick()">Zahtevi</button>
@@ -33,24 +10,8 @@
 
     <ng-container *ngIf="(isLoggedIn && userRole === 'ROLE_SPORTS_DIRECTOR')">
       <button class="nav-btn" (click)="onMetricsClick()">Metrike</button>
-      <button class="nav-btn" (click)="onWishlistsClick()">Liste Želja</button>
-      <button class="nav-btn" (click)="onRequestsClick()">Zahtevi</button>
       <button class="nav-btn" (click)="onPlayerRecommendationClick()">Preporuka Igrača</button>
       <button class="nav-btn" (click)="onSeachTemplatesClick()">Šabloni Preporuke</button>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && userRole === 'ROLE_BUYER'">
-      <button class="nav-btn" (click)="router.navigate(['/search-matches'])">Kupovina karata</button>
-      <button class="nav-btn" (click)="router.navigate(['/my-tickets'])">Moje karte</button>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && userRole === 'ROLE_ADMIN'">
-      <button class="nav-btn" (click)="router.navigate(['/zones'])">Zone</button>
-      <button class="nav-btn" (click)="router.navigate(['/ticket-types'])">Tipovi karata</button>
-      <button class="nav-btn" (click)="router.navigate(['/pricing-rules'])">Cenovnik</button>
-      <button class="nav-btn" (click)="router.navigate(['/game-zone-prices'])">Cene po utakmici</button>
-      <button class="nav-btn" (click)="router.navigate(['/price-change-log'])">Istorija cena</button>
-      <button class="nav-btn" (click)="router.navigate(['/ticket-analytics'])">Analitika</button>
     </ng-container>
 
     <ng-container *ngIf="isLoggedIn">

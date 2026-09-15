@@ -41,16 +41,6 @@
         </select>
       </div>
 
-      <div class="form-group">
-        <label for="clubId">Izaberite klub</label>
-        <select id="clubId" formControlName="clubId">
-          <option value="" disabled selected>Izaberite klub...</option>
-          <option *ngFor="let club of availableClubs" [value]="club.id">
-            {{ club.name }}
-          </option>
-        </select>
-      </div>
-
       <div *ngIf="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>

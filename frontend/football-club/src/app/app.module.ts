@@ -8,13 +8,9 @@ import { AppRoutingModule } from './infrastructure/routing/app-routing.module';
 import { AppComponent } from './app.component';
 import { JwtInterceptor } from './infrastructure/auth/jwt/jwt.interceptor';
 
-import { MatchModule } from './feature-modules/match/match.module';
-import { TicketSalesModule } from './feature-modules/ticket-sales/ticket-sales.module';
-
 import { CommonModule } from '@angular/common';
 import { AuthModule } from './infrastructure/auth/components/auth.module';
 import { LayoutModule } from './feature-modules/layout/layout.module';
-import { ScoutingPlayerListComponent } from './feature-modules/scouting/components/scouting-player-list/scouting-player-list.component';
 import { ScoutingModule } from './feature-modules/scouting/scouting.module';
 import { NgChartsModule } from 'ng2-charts';
 import { MarkdownModule } from 'ngx-markdown';
@@ -34,8 +30,6 @@ export function tokenGetter() {
     FormsModule,
     ReactiveFormsModule,
     AppRoutingModule,
-    MatchModule,
-    TicketSalesModule,
     AuthModule,
     LayoutModule,
     ScoutingModule,

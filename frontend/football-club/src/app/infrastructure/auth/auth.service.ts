@@ -72,8 +72,6 @@ export class AuthService {
       email: decodedToken.email || '',
       isActive: true, // Čim ima validan token, aktivan je
       role: decodedToken.role as RoleEnum, // Bekend treba da upakuje ulogu pod 'role' claim
-      // Izdvajamo clubId direktno iz tokena, ako postoji
-      clubId: decodedToken.clubId ? Number(decodedToken.clubId) : undefined
     };
 
     this.user$.next(user);

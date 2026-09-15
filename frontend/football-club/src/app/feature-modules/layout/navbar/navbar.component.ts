@@ -23,20 +23,7 @@ export class NavbarComponent implements OnInit {
     this.authService.user$.subscribe(user => {
       this.isLoggedIn = !!user;
       this.userRole = user?.role;
-      this.clubId = user?.clubId;
     });
-  }
-
-  get isHeadCoach(): boolean {
-    return this.userRole === 'ROLE_HEAD_COACH';
-  }
-
-  get isAssistantCoach(): boolean {
-    return this.userRole === 'ROLE_ASSISTANT_COACH';
-  }
-
-  get isStatistician(): boolean {
-    return this.userRole === 'ROLE_STATISTICIAN';
   }
 
   onReportsClick() {
@@ -56,16 +43,6 @@ export class NavbarComponent implements OnInit {
     if (this.isLoggedIn) {
       if (this.userRole === 'ROLE_SCOUT' || this.userRole === 'ROLE_SPORTS_DIRECTOR') {
         this.router.navigate(['/scouting-dashboard']);
-      } else if (
-        this.userRole === 'ROLE_HEAD_COACH' ||
-        this.userRole === 'ROLE_ASSISTANT_COACH' ||
-        this.userRole === 'ROLE_STATISTICIAN'
-      ) {
-        if (this.clubId) {
-          this.router.navigate(['/club-details', this.clubId]);
-        } else {
-          this.router.navigate(['/clubs']);
-        }
       } else {
         this.router.navigate(['/']);
       }
