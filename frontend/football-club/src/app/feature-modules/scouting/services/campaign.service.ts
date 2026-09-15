@@ -22,4 +22,8 @@ export class CampaignService {
   getCampaignRecommendations(id: number): Observable<PlayerRecommendation[]> {
     return this.http.get<PlayerRecommendation[]>(`${this.baseUrl}/${id}/recommendations`);
   }
+
+  getMyActiveCampaigns(): Observable<CampaignDetails[]> {
+    return this.http.get<CampaignDetails[]>(`${this.baseUrl}/my/active`);
+  }
 }

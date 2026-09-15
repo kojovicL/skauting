@@ -29,11 +29,13 @@ export class LoginComponent {
       this.authService.login(this.loginForm.value).subscribe({
         next: () => {
           if (this.authService.user$.value !== null && (
-            this.authService.user$.value?.role === RoleEnum.ROLE_SCOUT || 
-            this.authService.user$.value.role === RoleEnum.ROLE_SPORTS_DIRECTOR)
-            ) {
+            this.authService.user$.value?.role === RoleEnum.ROLE_SCOUT)
+          ) 
+          {
               this.router.navigate(['/metrics-dashboard']); // Redirect to metrics dashboard for scouts and sports directors
-            }
+          } else if (this.authService.user$.value?.role === RoleEnum.ROLE_SPORTS_DIRECTOR) {
+              this.router.navigate(['/director-dashboard']); // Redirect to director dashboard for sports directors
+          }
           else {
             this.router.navigate(['/']); // Redirect to home or dashboard on success
           }
