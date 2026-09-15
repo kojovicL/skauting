@@ -2,26 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth.service';
-import { ClubService } from '../../../../feature-modules/match/services/club.service';
 import { RoleEnum } from '../../model/user.model';
-import { Club } from '../../../../feature-modules/match/models/club.model';
 
 @Component({
   selector: 'app-registration',
   templateUrl: './registration.component.html',
   styleUrls: ['./registration.component.css']
 })
-export class RegistrationComponent implements OnInit {
+export class RegistrationComponent {
   registerForm: FormGroup;
   errorMessage: string = '';
-  availableClubs: Club[] = [];
   roles = Object.values(RoleEnum)
     .filter(role => role !== RoleEnum.ROLE_ADMIN);
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private clubService: ClubService,
     private router: Router
   ) {
     this.registerForm = this.fb.group({
@@ -31,18 +27,6 @@ export class RegistrationComponent implements OnInit {
       username: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       role: ['', Validators.required],
-      clubId: ['', Validators.required]
-    });
-  }
-
-  ngOnInit(): void {
-    this.clubService.getAllClubs().subscribe({
-      next: (clubs) => {
-        this.availableClubs = clubs;
-      },
-      error: (err) => {
-        console.error('Failed to fetch clubs', err);
-      }
     });
   }
 

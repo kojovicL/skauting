@@ -14,5 +14,4 @@ export interface User {
   email: string;
   isActive: boolean;
   role: RoleEnum;
-  clubId?: number;
 }
