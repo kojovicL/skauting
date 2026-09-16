@@ -223,7 +223,6 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   onReportsClick() { this.router.navigate(['/my-reports']); }
-  onRequestsClick() { this.router.navigate(['/scouting-requests']); }
   onMetricsClick() { this.router.navigate(['/metrics-dashboard']); }
   onPlayerRecommendationClick() { this.router.navigate(['/player-recommendations']); }
   onSeachTemplatesClick() { this.router.navigate(['/search-templates']); }

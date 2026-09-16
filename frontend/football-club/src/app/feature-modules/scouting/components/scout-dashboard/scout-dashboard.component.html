@@ -67,7 +67,7 @@
     <div class="campaign-card" *ngFor="let campaign of campaigns">
       <div class="campaign-header">
         <div class="header-top-row">
-          <h2 class="clickable-title" [routerLink]="['/campaigns', campaign.id]">
+          <h2 style="margin: 0 0 1rem 0; color: #2c3e50; font-size: 1.4rem;">
             {{ campaign.name }}
           </h2>
           <button class="btn-primary-small" (click)="openOnboardModal(campaign.id)">+ Dodaj igrača</button>

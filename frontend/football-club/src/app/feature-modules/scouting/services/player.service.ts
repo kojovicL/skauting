@@ -23,4 +23,12 @@ export class PlayerService {
     let params = new HttpParams().set('query', query);
     return this.http.get<LocalPlayerSearch[]>(`${this.baseUrl}/search`, { params });
   }
+
+  getPlayerDetails(id: number): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/${id}/details`);
+  }
+
+  getRecentMatches(id: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/${id}/recent-matches`);
+  }
 }

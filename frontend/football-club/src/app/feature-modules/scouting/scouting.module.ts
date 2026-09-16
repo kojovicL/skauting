@@ -14,6 +14,7 @@ import { ReportViewComponent } from './components/report-view/report-view.compon
 import { SeasonalReportViewComponent } from './components/seasonal-report-view/seasonal-report-view.component';
 import { NgChartsModule } from 'ng2-charts';
 import { MarkdownModule } from 'ngx-markdown';
+import { PlayerViewComponent } from './components/player-view/player-view.component';
 
 
 
@@ -29,6 +30,7 @@ import { MarkdownModule } from 'ngx-markdown';
     PlayerRecommendationComponent,
     ReportViewComponent,
     SeasonalReportViewComponent,
+    PlayerViewComponent,
   ],
   imports: [
     CommonModule,

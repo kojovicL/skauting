@@ -76,6 +76,15 @@
         <div class="form-group"><label>Skaut Ocena</label><input type="number" step="0.5" [(ngModel)]="editData.rawRating" class="form-control rating-input"></div>
       </div>
     </div>
+    
+    <!-- COMMENTARY -->
+    <div class="section-card">
+      <h3 class="section-title">Taktički Komentar</h3>
+      <div *ngIf="!isEditing" class="commentary-view">
+        "{{ report.overallCommentary }}"
+      </div>
+      <textarea *ngIf="isEditing" [(ngModel)]="editData.overallCommentary" rows="5" class="commentary-input"></textarea>
+    </div>
 
     <!-- GROUPED METRICS GRID -->
     <div class="grouped-metrics-grid">
@@ -96,15 +105,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- COMMENTARY -->
-    <div class="section-card">
-      <h3 class="section-title">Taktički Komentar</h3>
-      <div *ngIf="!isEditing" class="commentary-view">
-        "{{ report.overallCommentary }}"
-      </div>
-      <textarea *ngIf="isEditing" [(ngModel)]="editData.overallCommentary" rows="5" class="commentary-input"></textarea>
     </div>
 
     <!-- EDIT ACTIONS -->
