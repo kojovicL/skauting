@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -299,22 +300,30 @@ public class ReportService implements IReportService {
     @Override
     @Transactional(readOnly = true)
     public List<UpcomingMatchTaskDTO> getUpcomingMatchTasksForScout(Long scoutId) {
-        List<MonitoredPlayer> scoutPlayers = monitoredPlayerRepository.findActiveByScoutId(scoutId);
+        List<MonitoredPlayer> rawScoutPlayers = monitoredPlayerRepository.findActiveByScoutId(scoutId);
 
-        if (scoutPlayers.isEmpty()) {
+        if (rawScoutPlayers.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // Extract unique team IDs for all the scout's assigned players
+        // 1. Filtriramo duplikate igrača na samom početku (grupisanjem po playerId)
+        List<MonitoredPlayer> scoutPlayers = new ArrayList<>(rawScoutPlayers.stream()
+                .collect(Collectors.toMap(
+                        mp -> mp.getPlayer().getId(), // Ključ je ID igrača
+                        mp -> mp,                     // Vrednost je sam objekat
+                        (existing, replacement) -> existing // Ako postoji duplikat, zadrži prvi
+                )).values());
+
+        // 2. Izvlačimo jedinstvene ID-jeve timova
         List<Long> teamIds = scoutPlayers.stream()
                 .map(MonitoredPlayer::getTeamId)
                 .distinct()
                 .collect(Collectors.toList());
 
-        // Fetch all upcoming matches involving those teams
+        // 3. Preuzimamo utakmice
         List<Match> upcomingMatches = matchRepository.findUpcomingMatchesForTeams(teamIds);
 
-        // Map and group players into their corresponding upcoming matches
+        // 4. Mapiramo utakmice i igrače (bez potrebe za .distinct() jer smo već očistili listu)
         return upcomingMatches.stream().map(match -> {
             List<UpcomingMatchTaskDTO.ScoutMatchPlayerDTO> playingMonitoredPlayers = scoutPlayers.stream()
                     .filter(mp -> mp.getTeamId().equals(match.getHomeTeam().getId()) ||
@@ -328,7 +337,7 @@ public class ReportService implements IReportService {
                                     ? match.getHomeTeam().getName()
                                     : match.getAwayTeam().getName())
                             .build())
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()); // Uklonjen .distinct() odavde
 
             return UpcomingMatchTaskDTO.builder()
                     .matchId(match.getId())

@@ -34,4 +34,16 @@ public class PlayerController {
 
         return ResponseEntity.ok(results);
     }
+
+    @GetMapping("/{id}/details")
+    @PreAuthorize("hasAnyRole('SCOUT', 'SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<com.football_club.Scouting.dto.PlayerDetailsDTO> getPlayerDetails(@PathVariable Long id) {
+        return ResponseEntity.ok(playerService.getPlayerDetails(id));
+    }
+
+    @GetMapping("/{id}/recent-matches")
+    @PreAuthorize("hasAnyRole('SCOUT', 'SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<List<com.football_club.Scouting.dto.RecentMatchDTO>> getRecentMatches(@PathVariable Long id) {
+        return ResponseEntity.ok(playerService.getRecentMatches(id));
+    }
 }
