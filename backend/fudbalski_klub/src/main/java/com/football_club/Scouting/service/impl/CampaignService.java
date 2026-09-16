@@ -229,6 +229,7 @@ public class CampaignService implements ICampaignService {
                     report.getPlayer().getId(),
                     report.getPlayer().getName(),
                     report.getPlayer().getSurname(),
+                    report.getPlayer().getPhotoUrl(),
                     finalScore,
                     "CAMPAIGN_AVERAGE"
             ));
