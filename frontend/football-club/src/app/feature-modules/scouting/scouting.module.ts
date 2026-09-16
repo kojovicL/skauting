@@ -11,6 +11,9 @@ import { ReportCreateComponent } from './components/report-create/report-create.
 import { MyReportsComponent } from './components/my-reports/my-reports.component';
 import { PlayerRecommendationComponent } from './components/player-recommendation/player-recommendation.component';
 import { ReportViewComponent } from './components/report-view/report-view.component';
+import { SeasonalReportViewComponent } from './components/seasonal-report-view/seasonal-report-view.component';
+import { NgChartsModule } from 'ng2-charts';
+import { MarkdownModule } from 'ngx-markdown';
 
 
 
@@ -25,12 +28,15 @@ import { ReportViewComponent } from './components/report-view/report-view.compon
     MyReportsComponent,
     PlayerRecommendationComponent,
     ReportViewComponent,
+    SeasonalReportViewComponent,
   ],
   imports: [
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
+    NgChartsModule,
+    MarkdownModule.forChild()
   ]
 })
 export class ScoutingModule { }

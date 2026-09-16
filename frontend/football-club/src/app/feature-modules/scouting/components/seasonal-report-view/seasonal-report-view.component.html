@@ -1,0 +1,90 @@
+<div class="report-container">
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Učitavanje sezonskog izveštaja i grafikona...</p>
+  </div>
+
+  <div *ngIf="!isLoading && !report" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="report" class="report-content">
+    
+    <!-- HEADER -->
+    <div class="report-header">
+      <div class="header-player">
+        <img [src]="report.playerPhotoUrl || 'assets/default-avatar.png'" alt="Igrač">
+        <div class="hp-info">
+          <h1>{{ report.playerName }} {{ report.playerSurname }}</h1>
+          <p class="tag-row">
+            <span class="badge pos-badge">{{ report.playerPosition || 'N/A' }}</span>
+            <span class="badge league-badge">{{ report.leagueName }} (Sezona {{ report.seasonYear }})</span>
+          </p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <p class="source-tag">Izvor podataka: <strong>{{ report.source === 'API_HISTORICAL' ? 'Istorijski (API)' : 'Lokalni Skauting' }}</strong></p>
+        <button class="btn-secondary" routerLink="/my-reports">Nazad</button>
+      </div>
+    </div>
+
+    <!-- CORE SEASON STATS -->
+    <div class="section-card">
+      <h3 class="section-title">Zbirne Performanse Sezone</h3>
+      <div class="stats-grid">
+        <div class="stat-box"><span>Minutaža</span><strong>{{ report.minutesPlayed }}'</strong></div>
+        <div class="stat-box"><span>Golovi po meču</span><strong>{{ report.goalsPer90 | number:'1.2-2' }}</strong></div>
+        <div class="stat-box"><span>Asist. po meču</span><strong>{{ report.assistsPer90 | number:'1.2-2' }}</strong></div>
+        <div class="stat-box rating-box"><span>Pros. Ocena (Težinska)</span><strong>{{ report.avgWeightedRating | number:'1.1-2' }}</strong></div>
+        <div class="stat-box rating-box" *ngIf="report.avgScoutScore > 0"><span>Pros. Skautska Ocena</span><strong>{{ report.avgScoutScore | number:'1.1-2' }}</strong></div>
+      </div>
+    </div>
+
+    <!-- AI COMMENTARY (MARKDOWN) -->
+    <div class="section-card summary-card">
+      <h3 class="section-title"><span class="material-symbols-outlined">auto_awesome</span> AI Analiza Sezone</h3>
+      <div class="markdown-container">
+        <markdown [data]="report.seasonSummary"></markdown>
+      </div>
+    </div>
+
+    <!-- CHARTS SECTION -->
+    <div class="charts-layout">
+      
+      <!-- RADAR CHART (Left Column) -->
+      <div class="radar-column">
+        <div class="section-card chart-card">
+          <h3 class="section-title">Profil Igrača (Ključne Metrike)</h3>
+          
+          <div *ngIf="!hasRadar" class="no-radar-msg">
+            Nedovoljno specifičnih podataka (percentila) za generisanje profila pozicije.
+          </div>
+          
+          <div *ngIf="hasRadar" class="radar-wrapper">
+            <canvas baseChart
+              [data]="radarChartData"
+              [options]="radarChartOptions"
+              [type]="'radar'">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- HORIZONTAL BAR CHARTS (Right Column) -->
+      <div class="bars-column">
+        <div class="section-card chart-card" *ngFor="let chart of barCharts">
+          <h3 class="section-title">{{ chart.categoryName }}</h3>
+          <div class="bar-wrapper">
+            <canvas baseChart
+              [data]="chart.data"
+              [options]="chart.options"
+              [type]="'bar'">
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

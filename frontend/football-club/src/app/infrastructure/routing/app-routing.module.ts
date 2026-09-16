@@ -14,6 +14,7 @@ import { ReportCreateComponent } from 'src/app/feature-modules/scouting/componen
 import { MyReportsComponent } from 'src/app/feature-modules/scouting/components/my-reports/my-reports.component';
 import { PlayerRecommendationComponent } from 'src/app/feature-modules/scouting/components/player-recommendation/player-recommendation.component';
 import { ReportViewComponent } from 'src/app/feature-modules/scouting/components/report-view/report-view.component';
+import { SeasonalReportViewComponent } from 'src/app/feature-modules/scouting/components/seasonal-report-view/seasonal-report-view.component';
 
 const routes: Routes = [
   { path: '',                     redirectTo: 'login', pathMatch: 'full' },
@@ -24,6 +25,7 @@ const routes: Routes = [
 
   // Skaut/Direktor
   { path: 'reports/view/:id', component: ReportViewComponent },
+  { path: 'seasonal-reports/view/:id', component: SeasonalReportViewComponent },
 
   // Skaut
   { path: 'scout-dashboard',        component: ScoutDashboardComponent },
@@ -37,7 +39,7 @@ const routes: Routes = [
   { path: 'scout-management',        component: ScoutManagementComponent },
   { path: 'player-recommendations', component: PlayerRecommendationComponent },
 
-  { path: '**',                      redirectTo: 'matches' }
+  { path: '**',                      redirectTo: 'director-dashboard' }
 ];
 
 @NgModule({

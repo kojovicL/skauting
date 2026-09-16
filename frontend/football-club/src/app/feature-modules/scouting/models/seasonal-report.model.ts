@@ -13,6 +13,8 @@ export interface SeasonalReport {
   playerId: number;
   playerName: string;
   playerSurname: string;
+  playerPhotoUrl?: string;
+  playerPosition?: string;
   leagueId: number;
   leagueName: string;
   difficultyMultiplier: number;
@@ -23,5 +25,6 @@ export interface SeasonalReport {
   goalsPer90: number;
   assistsPer90: number;
   avgWeightedRating: number;
+  seasonSummary?: string;
   metrics: SeasonalValuedMetric[];
 }
