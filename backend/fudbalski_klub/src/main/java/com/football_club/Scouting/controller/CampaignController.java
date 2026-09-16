@@ -84,4 +84,10 @@ public class CampaignController {
         campaignService.endCampaign(id);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/active/my-region")
+    @PreAuthorize("hasAnyRole('SCOUT', 'ADMIN')")
+    public ResponseEntity<List<CampaignDetailsDTO>> getActiveCampaignsForScoutRegion(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(campaignService.getActiveCampaignsForScout(userDetails));
+    }
 }

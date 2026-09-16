@@ -74,6 +74,25 @@ public class CampaignService implements ICampaignService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<CampaignDetailsDTO> getActiveCampaignsForScout(User scout) {
+        if (scout.getRegion() == null) {
+            return Collections.emptyList();
+        }
+
+        List<Campaign> campaigns;
+        if (scout.getRegion() == Region.GLOBAL) {
+            campaigns = campaignRepository.findByStatus(CampaignStatus.ACTIVE);
+        } else {
+            campaigns = campaignRepository.findByRegionAndStatus(scout.getRegion(), CampaignStatus.ACTIVE);
+        }
+
+        return campaigns.stream()
+                .map(this::mapToCampaignDetailsDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Transactional
     public void endCampaign(Long id) {
         Campaign campaign = getCampaignById(id);

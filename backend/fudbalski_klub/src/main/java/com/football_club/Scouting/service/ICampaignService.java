@@ -18,4 +18,5 @@ public interface ICampaignService {
     List<CampaignDetailsDTO> getMyActiveCampaignsDetails(Long directorId);
     List<CampaignDetailsDTO> getMyCompletedCampaignsDetails(Long directorId);
     void endCampaign(Long id);
+    List<CampaignDetailsDTO> getActiveCampaignsForScout(User scout);
 }
