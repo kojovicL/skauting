@@ -12,6 +12,7 @@ import com.football_club.Scouting.model.Team;
 import com.football_club.Scouting.repository.TeamRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
@@ -83,6 +84,17 @@ public class LeagueService implements ILeagueService {
         league.addTeam(team);
         
         leagueRepository.save(league);
+    }
+
+    @Override
+    @Transactional
+    public void updateLeagueMultipliers(Map<Long, Double> multipliers) {
+        for (Map.Entry<Long, Double> entry : multipliers.entrySet()) {
+            leagueRepository.findById(entry.getKey()).ifPresent(league -> {
+                league.setDifficultyMultiplier(entry.getValue());
+                leagueRepository.save(league);
+            });
+        }
     }
     
     private LeagueDTO mapToDTO(League league) {

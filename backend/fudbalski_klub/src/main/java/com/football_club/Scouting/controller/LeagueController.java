@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/leagues")
@@ -57,6 +58,13 @@ public class LeagueController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> addClubToLeague(@PathVariable Long leagueId, @PathVariable Long teamId) {
         leagueService.addTeamToLeague(leagueId, teamId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/bulk-multipliers")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<Void> updateMultipliers(@RequestBody Map<Long, Double> multipliers) {
+        leagueService.updateLeagueMultipliers(multipliers);
         return ResponseEntity.ok().build();
     }
 }
