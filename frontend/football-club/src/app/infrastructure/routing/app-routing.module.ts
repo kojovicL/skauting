@@ -9,6 +9,7 @@ import { SearchTemplateManagementComponent } from 'src/app/feature-modules/scout
 import { MetricsDashboardComponent } from 'src/app/feature-modules/scouting/components/metrics-dashboard/metrics-dashboard.component';
 import { DirectorDashboardComponent } from 'src/app/feature-modules/scouting/components/director-dashboard/director-dashboard.component';
 import { ScoutDashboardComponent } from 'src/app/feature-modules/scouting/components/scout-dashboard/scout-dashboard.component';
+import { ScoutManagementComponent } from 'src/app/feature-modules/scouting/components/scout-management/scout-management.component';
 
 const routes: Routes = [
   { path: '',                     redirectTo: 'login', pathMatch: 'full' },
@@ -26,6 +27,7 @@ const routes: Routes = [
   { path: 'director-dashboard',     component: DirectorDashboardComponent },
   { path: 'metrics-dashboard',      component: MetricsDashboardComponent },
   { path: 'search-templates',       component: SearchTemplateManagementComponent },
+  { path: 'scout-management',        component: ScoutManagementComponent },
 
   { path: '**',                      redirectTo: 'matches' }
 ];

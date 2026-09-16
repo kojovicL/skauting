@@ -131,7 +131,7 @@
       <div class="search-bar">
         <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="executeSearch()" placeholder="Pretraži po prezimenu...">
         <button class="btn-search" (click)="executeSearch()" [disabled]="isSearching">
-          &#128269;
+          <span class="material-symbols-outlined">search</span>
         </button>
       </div>
 

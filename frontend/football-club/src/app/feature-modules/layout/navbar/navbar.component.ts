@@ -112,6 +112,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   onMetricsClick() { this.router.navigate(['/metrics-dashboard']); }
   onPlayerRecommendationClick() { this.router.navigate(['/player-recommendation']); }
   onSeachTemplatesClick() { this.router.navigate(['/search-templates']); }
+  onScoutsClick() { this.router.navigate(['/scout-management']); }
 
   onLogoutClick() {
     this.cleanupNotifications();
@@ -123,8 +124,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   onLogoClicked() {
     if (this.isLoggedIn) {
-      if (this.userRole === 'ROLE_SCOUT' || this.userRole === 'ROLE_SPORTS_DIRECTOR') {
-        this.router.navigate(['/scouting-dashboard']);
+      if (this.userRole === 'ROLE_SCOUT') {
+        this.router.navigate(['/scout-dashboard']);
+      } else if (this.userRole === 'ROLE_SPORTS_DIRECTOR') {
+        this.router.navigate(['/director-dashboard']);
       } else {
         this.router.navigate(['/']);
       }

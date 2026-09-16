@@ -6,6 +6,7 @@ import { MetricsDashboardComponent } from './components/metrics-dashboard/metric
 import { SearchTemplateManagementComponent } from './components/search-template-management/search-template-management.component';
 import { DirectorDashboardComponent } from './components/director-dashboard/director-dashboard.component';
 import { ScoutDashboardComponent } from './components/scout-dashboard/scout-dashboard.component';
+import { ScoutManagementComponent } from './components/scout-management/scout-management.component';
 
 
 
@@ -15,6 +16,7 @@ import { ScoutDashboardComponent } from './components/scout-dashboard/scout-dash
     SearchTemplateManagementComponent,
     DirectorDashboardComponent,
     ScoutDashboardComponent,
+    ScoutManagementComponent,
   ],
   imports: [
     CommonModule,

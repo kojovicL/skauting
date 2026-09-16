@@ -1,0 +1,157 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">Upravljanje Skautima</h1>
+  </div>
+
+  <!-- KPI SUMMARY -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon"><span class="material-symbols-outlined">group</span></div>
+      <div class="kpi-info">
+        <h3>{{ totalScouts }}</h3>
+        <p>Ukupno skauta</p>
+      </div>
+    </div>
+    <div class="kpi-card warning" *ngIf="unassignedScouts > 0">
+      <div class="kpi-icon"><span class="material-symbols-outlined">warning</span></div>
+      <div class="kpi-info">
+        <h3>{{ unassignedScouts }}</h3>
+        <p>Nedodeljeni skauti</p>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon"><span class="material-symbols-outlined">public</span></div>
+      <div class="kpi-info">
+        <h3>{{ topRegion }}</h3>
+        <p>Najzastupljeniji region</p>
+      </div>
+    </div>
+    <div class="kpi-card highlight">
+      <div class="kpi-icon"><span class="material-symbols-outlined">bar_chart</span></div>
+      <div class="kpi-info">
+        <h3>{{ totalReports }}</h3>
+        <p>Kreiranih izveštaja</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" placeholder="Pretraži skauta (ime, username)..." [(ngModel)]="searchQuery" (input)="applyFilters()">
+    </div>
+    <div class="filter-box">
+      <select [(ngModel)]="selectedRegionFilter" (change)="applyFilters()">
+        <option value="ALL">Svi regioni</option>
+        <option value="UNASSIGNED">Samo nedodeljeni</option>
+        <option *ngFor="let reg of regions" [value]="reg">{{ reg }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- SCOUTS TABLE -->
+  <div class="table-container">
+    <table class="scouts-table">
+      <thead>
+        <tr>
+          <th>Skaut</th>
+          <th>Zaduženi Region</th>
+          <th>Aktivnih Zadataka</th>
+          <th>Broj Izveštaja</th>
+          <th>Akcije</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="filteredScouts.length === 0">
+          <td colspan="5" class="empty-state">Nema skauta koji se poklapaju sa pretragom.</td>
+        </tr>
+        <tr *ngFor="let scout of filteredScouts">
+          <td>
+            <div class="scout-profile">
+              <div class="avatar">{{ scout.name.charAt(0) }}{{ scout.surname.charAt(0) }}</div>
+              <div class="info">
+                <span class="name">{{ scout.name }} {{ scout.surname }}</span>
+                <span class="username">&#64;{{ scout.username }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <select class="region-select" [ngModel]="scout.region" (ngModelChange)="onRegionChange(scout, $event)" [class.unassigned]="!scout.region">
+              <option [ngValue]="null" disabled>Nije dodeljen</option>
+              <option *ngFor="let reg of regions" [value]="reg">{{ reg }}</option>
+            </select>
+          </td>
+          <td>
+            <span class="stat-badge" [class.low]="scout.activeMonitoredPlayers === 0">{{ scout.activeMonitoredPlayers }} igrača</span>
+          </td>
+          <td>
+            <span class="stat-badge success">{{ scout.totalReports }} izveštaja</span>
+          </td>
+          <td>
+            <button class="btn-action" (click)="openDrawer(scout)">Detalji</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ACTIVITY DRAWER OVERLAY -->
+<div class="drawer-overlay" [class.open]="isDrawerOpen" (click)="closeDrawer()"></div>
+
+<!-- ACTIVITY DRAWER -->
+<div class="activity-drawer" [class.open]="isDrawerOpen">
+  <div class="drawer-header" *ngIf="selectedScout">
+    <h2>Aktivnost Skauta</h2>
+    <div class="scout-drawer-profile">
+      <div class="avatar large">{{ selectedScout.name.charAt(0) }}{{ selectedScout.surname.charAt(0) }}</div>
+      <div class="info">
+        <span class="name">{{ selectedScout.name }} {{ selectedScout.surname }}</span>
+        <span class="region-pill">{{ selectedScout.region || 'Nedodeljen' }}</span>
+      </div>
+    </div>
+    <button class="btn-close" (click)="closeDrawer()">✕</button>
+  </div>
+
+  <div class="drawer-tabs">
+    <button [class.active]="drawerTab === 'PLAYERS'" (click)="drawerTab = 'PLAYERS'">Aktivni zadaci</button>
+    <button [class.active]="drawerTab === 'REPORTS'" (click)="drawerTab = 'REPORTS'">Poslednji izveštaji</button>
+  </div>
+
+  <div class="drawer-content">
+    
+    <!-- PLAYERS TAB -->
+    <div *ngIf="drawerTab === 'PLAYERS'" class="drawer-list">
+      <div *ngIf="selectedScoutPlayers.length === 0" class="empty-state">
+        Skaut trenutno nema aktivnih zadataka.
+      </div>
+      <div class="drawer-card" *ngFor="let player of selectedScoutPlayers">
+        <img [src]="player.photoUrl || 'assets/default-avatar.png'" alt="Slika">
+        <div class="drawer-card-info">
+          <h4>{{ player.playerName }} {{ player.playerSurname }}</h4>
+          <p><i class="icon-club"></i> {{ player.currentTeamName }}</p>
+          <span class="campaign-pill">{{ player.campaignName }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS TAB -->
+    <div *ngIf="drawerTab === 'REPORTS'" class="drawer-list">
+      <div *ngIf="selectedScoutReports.length === 0" class="empty-state">
+        Skaut još uvek nije podneo nijedan izveštaj.
+      </div>
+      <div class="drawer-card" *ngFor="let report of selectedScoutReports">
+        <div class="report-meta">
+          <span class="report-date">{{ report.createdAt | date:'dd.MMM yyyy.' }}</span>
+          <span class="report-rating badge position-badge">{{ report.rawRating | number:'1.1-2' }} Ocena</span>
+        </div>
+        <div class="drawer-card-info">
+          <h4>{{ report.playerName }} {{ report.playerSurname }}</h4>
+          <p class="match-text">{{ report.homeTeamName }} vs {{ report.awayTeamName }}</p>
+          <p class="comment-preview">"{{ report.overallCommentary }}"</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

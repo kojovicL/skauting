@@ -23,9 +23,9 @@
             {{ campaign.name }}
           </h2>
           <div class="card-actions">
-            <button class="btn-action edit" title="Izmeni" (click)="openEditModal(campaign)">&#9998;</button>
-            <button *ngIf="activeTab === 'ACTIVE'" class="btn-action end" title="Završi kampanju" (click)="openConfirmModal('END', campaign.id, $event)">&#10004;</button>
-            <button class="btn-action delete" title="Obriši" (click)="openConfirmModal('DELETE', campaign.id, $event)">&#128465;</button>
+            <button class="btn-action edit" title="Izmeni" (click)="openEditModal(campaign)"><span class="material-symbols-outlined">edit</span></button>
+            <button *ngIf="activeTab === 'ACTIVE'" class="btn-action end" title="Završi kampanju" (click)="openConfirmModal('END', campaign.id, $event)"><span class="material-symbols-outlined">check</span></button>
+            <button class="btn-action delete" title="Obriši" (click)="openConfirmModal('DELETE', campaign.id, $event)"><span class="material-symbols-outlined">delete</span></button>
           </div>
         </div>
 
@@ -143,7 +143,7 @@
       <div class="search-bar">
         <input type="text" [(ngModel)]="searchQuery" (keyup.enter)="executeSearch()" placeholder="Pretraži po prezimenu...">
         <button class="btn-search" (click)="executeSearch()" [disabled]="isSearching">
-          &#128269;
+          <span class="material-symbols-outlined">search</span>
         </button>
       </div>
 
