@@ -33,4 +33,8 @@ export class LeagueService {
   addClubToLeague(leagueId: number, clubId: number): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${leagueId}/clubs/${clubId}`, {});
   }
+
+  updateMultipliers(multipliers: { [id: number]: number }): Observable<void> {
+    return this.http.patch<void>(`${this.baseUrl}/bulk-multipliers`, multipliers);
+  }
 }

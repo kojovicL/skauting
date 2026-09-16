@@ -5,6 +5,8 @@ import { AuthService } from '../../../infrastructure/auth/auth.service';
 import { RoleEnum } from '../../../infrastructure/auth/model/user.model';
 import { NotificationService } from 'src/app/feature-modules/scouting/services/notification.service';
 import { Notification } from 'src/app/feature-modules/scouting/models/notification.model';
+import { LeagueService } from 'src/app/feature-modules/scouting/services/league.service';
+import { League } from 'src/app/feature-modules/scouting/models/league.model';
 
 @Component({
   selector: 'app-navbar',
@@ -20,10 +22,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
   showNotifications: boolean = false;
   private wsSubscription: Subscription | undefined;
 
+  // --- League Multipliers Modal State ---
+  isLeagueModalOpen: boolean = false;
+  leagues: League[] = [];
+  modifiedMultipliers: { [id: number]: number } = {};
+  isSavingLeagues: boolean = false;
+
   constructor(
     private authService: AuthService,
     public router: Router,
     private notificationService: NotificationService,
+    private leagueService: LeagueService,
     private eRef: ElementRef
   ) {}
 
@@ -103,6 +112,41 @@ export class NavbarComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => console.error('Greška pri obeležavanju obaveštenja', err)
+    });
+  }
+
+  // --- League Modal Logic ---
+  openLeagueModal(): void {
+    this.isLeagueModalOpen = true;
+    this.leagueService.getAllLeagues().subscribe({
+      next: (data) => {
+        // Sortiraj lige po imenu za lakše snalaženje
+        this.leagues = data.sort((a, b) => a.name.localeCompare(b.name));
+        this.modifiedMultipliers = {};
+        this.leagues.forEach(l => {
+          this.modifiedMultipliers[l.id] = l.difficultyMultiplier;
+        });
+      },
+      error: (err) => console.error('Greška pri učitavanju liga', err)
+    });
+  }
+
+  closeLeagueModal(): void {
+    this.isLeagueModalOpen = false;
+    this.leagues = [];
+  }
+
+  saveLeagueMultipliers(): void {
+    this.isSavingLeagues = true;
+    this.leagueService.updateMultipliers(this.modifiedMultipliers).subscribe({
+      next: () => {
+        this.isSavingLeagues = false;
+        this.closeLeagueModal();
+      },
+      error: (err) => {
+        console.error('Greška pri čuvanju koeficijenata', err);
+        this.isSavingLeagues = false;
+      }
     });
   }
 
