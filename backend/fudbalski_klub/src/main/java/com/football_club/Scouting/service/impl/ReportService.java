@@ -236,6 +236,7 @@ public class ReportService implements IReportService {
                                 .reportId(report.getId())
                                 .metricId(vm.getMetric().getId())
                                 .metricName(vm.getMetric().getName())
+                                .category(vm.getMetric().getCategory())
                                 .value(vm.getValue())
                                 .build())
                         .collect(Collectors.toList()) : Collections.emptyList();
