@@ -21,4 +21,10 @@ public class SeasonalReportController {
     public ResponseEntity<List<SeasonalReportDTO>> getSeasonalReportsByPlayer(@PathVariable Long playerId) {
         return ResponseEntity.ok(seasonalReportService.getSeasonalReportsByPlayerId(playerId));
     }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SCOUT', 'SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<SeasonalReportDTO> getSeasonalReportById(@PathVariable Long id) {
+        return ResponseEntity.ok(seasonalReportService.getSeasonalReportDTOById(id));
+    }
 }

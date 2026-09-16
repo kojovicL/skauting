@@ -11,4 +11,5 @@ public interface ISeasonalReportService {
     SeasonalReport updateSeasonalReport(Long id, SeasonalReport report);
     void deleteSeasonalReport(Long id);
     List<SeasonalReportDTO> getSeasonalReportsByPlayerId(Long playerId);
+    SeasonalReportDTO getSeasonalReportDTOById(Long id);
 }

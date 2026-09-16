@@ -29,5 +29,9 @@ public class SeasonalReportDTO {
     private double assistsPer90;
     private double avgWeightedRating;
 
+    private String seasonSummary;
+    private String playerPhotoUrl;
+    private String playerPosition;
+
     private List<SeasonalValuedMetricDTO> metrics;
 }
