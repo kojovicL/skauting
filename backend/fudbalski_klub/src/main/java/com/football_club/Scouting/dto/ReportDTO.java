@@ -36,5 +36,9 @@ public class ReportDTO {
     private Double rawRating;
     private Double weightedRating;
 
+    private String playerPhotoUrl;
+    private Integer seasonYear;
+    private LocalDateTime matchDate;
+
     private List<ValuedMetricDTO> valuedMetrics;
 }

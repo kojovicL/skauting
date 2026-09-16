@@ -121,4 +121,10 @@ public class ReportController {
     public ResponseEntity<List<UpcomingMatchTaskDTO>> getUpcomingTasks(@AuthenticationPrincipal User userDetails) {
         return ResponseEntity.ok(reportService.getUpcomingMatchTasksForScout(userDetails.getId()));
     }
+
+    @GetMapping("/my/players")
+    @PreAuthorize("hasAnyRole('SCOUT', 'ADMIN')")
+    public ResponseEntity<List<PlayerSearchDTO>> getMyScoutedPlayers(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(reportService.getScoutedPlayers(userDetails.getId()));
+    }
 }

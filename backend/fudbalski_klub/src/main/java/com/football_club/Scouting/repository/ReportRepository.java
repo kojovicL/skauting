@@ -43,4 +43,6 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     """)
     List<Report> findReportsBySeasonId(@Param("seasonId") Long seasonId);
     long countByScoutId(Long scoutId);
+    @Query("SELECT DISTINCT r.player FROM Report r WHERE r.scout.id = :scoutId")
+    List<com.football_club.Scouting.model.Player> findDistinctPlayersByScoutId(@Param("scoutId") Long scoutId);
 }

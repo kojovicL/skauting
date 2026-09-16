@@ -85,6 +85,19 @@ public class ReportService implements IReportService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public List<PlayerSearchDTO> getScoutedPlayers(Long scoutId) {
+        return reportRepository.findDistinctPlayersByScoutId(scoutId).stream()
+                .map(p -> PlayerSearchDTO.builder()
+                        .id(p.getId())
+                        .name(p.getName())
+                        .surname(p.getSurname())
+                        .photoUrl(p.getPhotoUrl())
+                        .position(p.getPosition() != null ? p.getPosition().name() : null)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
     @Override
     @Transactional
     public ReportDTO createReport(ReportSaveDTO dto, Long scoutId) {
@@ -250,6 +263,9 @@ public class ReportService implements IReportService {
                 .assists(report.getAssists())
                 .rawRating(report.getRawRating())
                 .weightedRating(report.getWeightedRating())
+                .playerPhotoUrl(report.getPlayer().getPhotoUrl())
+                .seasonYear(report.getMatch() != null && report.getMatch().getSeason() != null ? report.getMatch().getSeason().getYear() : null)
+                .matchDate(report.getMatch() != null ? report.getMatch().getMatchDate() : null)
                 .valuedMetrics(metrics)
                 .build();
     }
