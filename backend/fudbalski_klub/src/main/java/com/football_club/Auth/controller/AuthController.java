@@ -60,11 +60,4 @@ public class AuthController {
 
         return ResponseEntity.ok("Registration successful.");
     }
-
-    @PatchMapping("/scouts/{id}/region")
-    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
-    public ResponseEntity<String> setScoutRegion(@PathVariable Long id, @RequestParam Region region) {
-        userService.assignRegionToScout(id, region);
-        return ResponseEntity.ok("Region uspešno dodeljen skautu.");
-    }
 }
