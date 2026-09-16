@@ -1,3 +1,5 @@
+import { Metric } from "./metric.model";
+
 export interface WeightedMetric {
   metricId: number;
   weight: number;
@@ -15,4 +17,9 @@ export interface PlayerRecommendation {
   photoUrl?: string;
   score: number;
   source: string;
+}
+
+export interface SelectedMetric {
+  metric: Metric;
+  weight: number;
 }

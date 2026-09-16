@@ -1,0 +1,148 @@
+<div class="recommendation-container">
+  
+  <div class="setup-section">
+    <h2>Kriterijumi za preporuku</h2>
+    
+    <div class="controls-row">
+      <div class="position-selector">
+        <label for="positionSelect">Pozicija u timu:</label>
+        <select id="positionSelect" [(ngModel)]="selectedPosition">
+          <option *ngFor="let pos of playerPositions" [value]="pos.value">{{ pos.label }}</option>
+        </select>
+      </div>
+      
+      <div class="management-actions">
+        <button class="btn-outline" (click)="openLoadTemplateModal()">Učitaj Šablon</button>
+        <button class="btn-outline" [disabled]="selectedMetrics.length === 0" (click)="openSaveTemplateModal()">Sačuvaj u Šablon</button>
+        <button class="btn-primary" (click)="openModal()"><b>+ Dodaj metriku</b></button>
+      </div>
+    </div>
+
+    <!-- Prazno stanje -->
+    <div *ngIf="selectedMetrics.length === 0" class="empty-metrics-state">
+      Izaberite metrike na osnovu kojih želite da AI algoritam proceni igrače.
+    </div>
+
+    <div class="metrics-grid">
+      <ng-container *ngFor="let sm of selectedMetrics">
+        <div class="metric-card">
+          <button class="remove-btn" (click)="removeMetric(sm.metric.id)">✕</button>
+          <h3>{{sm.metric.name}}</h3>
+          <span class="category-badge">{{ formatCategoryName(sm.metric.category) }}</span>
+          <div class="slider-container">
+            <label>Težina metrike: <strong>{{sm.weight | number:'1.1-1'}}</strong></label>
+            <input type="range" step="0.5" min="1" max="5" [(ngModel)]="sm.weight">
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-recommend" [disabled]="selectedMetrics.length === 0 || isLoadingRecommendations" (click)="submitRecommendation()">
+        <b>{{ isLoadingRecommendations ? 'Pretraga baze...' : 'Preporuči igrače' }}</b>
+      </button>
+    </div>
+  </div>
+
+  <div class="results-section" *ngIf="recommendations.length > 0 || isLoadingRecommendations">
+    <h2>Top 5 Preporuka</h2>
+    
+    <div *ngIf="isLoadingRecommendations" class="loading-state">
+      <div class="spinner"></div>
+      <p>Upoređujem igrače na poziciji sa odabranim metrikama...</p>
+    </div>
+
+    <div class="players-grid" *ngIf="!isLoadingRecommendations">
+      <ng-container *ngFor="let player of recommendations; let i = index">
+        <div class="player-card" (click)="viewPlayer(player.playerId)">
+          <div class="rank-badge" [ngClass]="{'gold': i === 0, 'silver': i === 1, 'bronze': i === 2}">
+            #{{i + 1}}
+          </div>
+          
+          <div class="player-avatar">
+            <img [src]="player.photoUrl || 'assets/default-avatar.png'" alt="Slika">
+          </div>
+
+          <div class="player-info">
+            <h3>{{player.name}} {{player.surname}}</h3>
+            <p><strong>Izvor evaluacije:</strong> {{ formatCategoryName(player.source) }}</p>
+          </div>
+          
+          <div class="player-score">
+            <span class="score-val">{{player.score | number:'1.1-2'}}</span>
+            <span class="source-lbl">Zbirni Rezultat</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DODAJ METRIKU -->
+<div class="modal-backdrop" *ngIf="showModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Dostupne metrike</h3>
+      <button class="close-modal-btn" (click)="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <ng-container *ngFor="let cat of getCategoryKeys(getAvailableMetricsByCategory())">
+        <div class="category-group">
+          <h4>{{ formatCategoryName(cat) }}</h4>
+          <div class="modal-metrics-list">
+            <ng-container *ngFor="let m of getAvailableMetricsByCategory()[cat]">
+              <div class="modal-metric-item" (click)="selectMetric(m)">
+                {{m.name}}
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: SAČUVAJ ŠABLON -->
+<div class="modal-backdrop" *ngIf="showSaveTemplateModal">
+  <div class="modal-content smaller-modal">
+    <div class="modal-header">
+      <h3>Sačuvaj kao Šablon</h3>
+      <button class="close-modal-btn" (click)="closeSaveTemplateModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="templateName">Naziv šablona:</label>
+        <input type="text" id="templateName" [(ngModel)]="newTemplateName" placeholder="Unesite naziv šablona..." class="form-control" autocomplete="off"/>
+      </div>
+      <div class="modal-actions-row">
+        <button class="btn-primary full-width" [disabled]="!newTemplateName.trim()" (click)="saveTemplate()">
+          Potvrdi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: UČITAJ ŠABLON -->
+<div class="modal-backdrop" *ngIf="showLoadTemplateModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Moji Sačuvani Šabloni</h3>
+      <button class="close-modal-btn" (click)="closeLoadTemplateModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="templates-list" *ngIf="savedTemplates.length > 0; else noTemplates">
+        <div class="template-list-item" *ngFor="let template of savedTemplates" (click)="loadTemplate(template)">
+          <div class="template-item-details">
+            <span class="template-name-title">{{ template.templateName }}</span>
+            <span class="template-parts-count">Broj metrika: {{ template.parts?.length || 0 }}</span>
+          </div>
+          <span class="material-symbols-outlined load-action-icon">download</span>
+        </div>
+      </div>
+      <ng-template #noTemplates>
+        <p class="empty-state-text">Nemate sačuvanih šablona za pretragu.</p>
+      </ng-template>
+    </div>
+  </div>
+</div>

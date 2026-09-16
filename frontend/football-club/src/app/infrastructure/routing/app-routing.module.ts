@@ -12,6 +12,7 @@ import { ScoutDashboardComponent } from 'src/app/feature-modules/scouting/compon
 import { ScoutManagementComponent } from 'src/app/feature-modules/scouting/components/scout-management/scout-management.component';
 import { ReportCreateComponent } from 'src/app/feature-modules/scouting/components/report-create/report-create.component';
 import { MyReportsComponent } from 'src/app/feature-modules/scouting/components/my-reports/my-reports.component';
+import { PlayerRecommendationComponent } from 'src/app/feature-modules/scouting/components/player-recommendation/player-recommendation.component';
 
 const routes: Routes = [
   { path: '',                     redirectTo: 'login', pathMatch: 'full' },
@@ -32,6 +33,7 @@ const routes: Routes = [
   { path: 'metrics-dashboard',      component: MetricsDashboardComponent },
   { path: 'search-templates',       component: SearchTemplateManagementComponent },
   { path: 'scout-management',        component: ScoutManagementComponent },
+  { path: 'player-recommendations', component: PlayerRecommendationComponent },
 
   { path: '**',                      redirectTo: 'matches' }
 ];
