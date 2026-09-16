@@ -66,7 +66,7 @@ export class AuthService {
 
     // Mapiramo podatke iz JWT claims-a u naš User interfejs
     const user: User = {
-      id: Number(decodedToken.id),
+      id: Number(decodedToken.key),
       // Spring Security obično stavlja username u claim 'sub' (subject), ali fallback na 'username'
       username: decodedToken.sub || decodedToken.username,
       email: decodedToken.email || '',

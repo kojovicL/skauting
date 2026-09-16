@@ -10,6 +10,7 @@ import { ScoutManagementComponent } from './components/scout-management/scout-ma
 import { ReportCreateComponent } from './components/report-create/report-create.component';
 import { MyReportsComponent } from './components/my-reports/my-reports.component';
 import { PlayerRecommendationComponent } from './components/player-recommendation/player-recommendation.component';
+import { ReportViewComponent } from './components/report-view/report-view.component';
 
 
 
@@ -23,6 +24,7 @@ import { PlayerRecommendationComponent } from './components/player-recommendatio
     ReportCreateComponent,
     MyReportsComponent,
     PlayerRecommendationComponent,
+    ReportViewComponent,
   ],
   imports: [
     CommonModule,

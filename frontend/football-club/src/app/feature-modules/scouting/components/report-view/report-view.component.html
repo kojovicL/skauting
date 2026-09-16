@@ -1,0 +1,137 @@
+<div class="report-container">
+  
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Učitavanje izveštaja...</p>
+  </div>
+
+  <div *ngIf="!isLoading && !report" class="error-banner">
+    {{ errorMessage }}
+    <button class="btn-secondary mt-2" routerLink="/my-reports">Nazad na arhivu</button>
+  </div>
+
+  <div *ngIf="report" class="report-content">
+    
+    <!-- HEADER -->
+    <div class="report-header">
+      <div class="header-player">
+        <img [src]="report.playerPhotoUrl || 'assets/default-avatar.png'" alt="Igrač">
+        <div class="hp-info">
+          <h1>{{ report.playerName }} {{ report.playerSurname }}</h1>
+          <p><span class="material-symbols-outlined icon-inline">sports_soccer</span> {{ report.teamAtTimeName }}</p>
+          <p class="scout-credit">Skautirao: <strong>{{ report.scoutUsername }}</strong> ({{ report.createdAt | date:'dd.MM.yyyy.' }})</p>
+        </div>
+      </div>
+      
+      <div class="header-match">
+        <div class="match-teams">
+          <span class="team-name">{{ report.homeTeamName }}</span>
+          <span class="score">vs</span>
+          <span class="team-name">{{ report.awayTeamName }}</span>
+        </div>
+        <div class="match-date" *ngIf="report.matchDate">{{ report.matchDate | date:'dd.MM.yyyy. HH:mm' }}</div>
+      </div>
+    </div>
+
+    <!-- OWNER ACTIONS -->
+    <div class="owner-actions" *ngIf="isOwner && !isEditing">
+      <button class="btn-outline-primary" (click)="startEdit()"><span class="material-symbols-outlined">edit</span> Izmeni Izveštaj</button>
+      <button class="btn-outline-danger" (click)="openDeleteConfirm()"><span class="material-symbols-outlined">delete</span> Obriši</button>
+    </div>
+
+    <!-- ERROR BANNER ZA EDIT -->
+    <div *ngIf="isEditing && errorMessage" class="error-banner mb-2">
+      {{ errorMessage }}
+    </div>
+
+    <!-- CORE STATS -->
+    <div class="section-card core-stats">
+      <h3 class="section-title">Osnovne Performanse na Meču</h3>
+      
+      <!-- View Mode -->
+      <div class="stats-grid" *ngIf="!isEditing">
+        <div class="stat-box"><span>Minutaža</span><strong>{{ report.minutesPlayed }}'</strong></div>
+        <div class="stat-box"><span>Broj Dresa</span><strong>{{ report.shirtNumber }}</strong></div>
+        <div class="stat-box"><span>Golovi</span><strong>{{ report.goals }}</strong></div>
+        <div class="stat-box"><span>Asistencije</span><strong>{{ report.assists }}</strong></div>
+        <div class="stat-box"><span>Status</span>
+          <strong>
+            {{ report.isSubstitute ? 'Izmena' : 'Starter' }} 
+            <span *ngIf="report.isCaptain">(K)</span>
+          </strong>
+        </div>
+        <div class="stat-box rating-box"><span>Skaut Ocena</span><strong>{{ report.rawRating | number:'1.1-2' }}</strong></div>
+      </div>
+
+      <!-- Edit Mode -->
+      <div class="stats-grid edit-grid" *ngIf="isEditing">
+        <div class="form-group"><label>Minutaža</label><input type="number" [(ngModel)]="editData.minutesPlayed" class="form-control"></div>
+        <div class="form-group"><label>Broj Dresa</label><input type="number" [(ngModel)]="editData.shirtNumber" class="form-control"></div>
+        <div class="form-group"><label>Golovi</label><input type="number" [(ngModel)]="editData.goals" class="form-control"></div>
+        <div class="form-group"><label>Asistencije</label><input type="number" [(ngModel)]="editData.assists" class="form-control"></div>
+        <div class="form-group checkbox-group">
+          <label><input type="checkbox" [(ngModel)]="editData.isSubstitute"> Ušao sa klupe</label>
+          <label><input type="checkbox" [(ngModel)]="editData.isCaptain"> Kapiten</label>
+        </div>
+        <div class="form-group"><label>Skaut Ocena</label><input type="number" step="0.5" [(ngModel)]="editData.rawRating" class="form-control rating-input"></div>
+      </div>
+    </div>
+
+    <!-- GROUPED METRICS GRID -->
+    <div class="grouped-metrics-grid">
+      <div class="section-card metrics-card" *ngFor="let group of groupedMetrics">
+        <h3 class="section-title">{{ group.categoryName }}</h3>
+        
+        <div class="metric-row" *ngFor="let m of group.metrics">
+          <div class="metric-info">
+            <span class="type-icon positive" *ngIf="m.type === 'POSITIVE'"><span class="material-symbols-outlined">trending_up</span></span>
+            <span class="type-icon negative" *ngIf="m.type === 'NEGATIVE'"><span class="material-symbols-outlined">trending_down</span></span>
+            <span class="type-icon neutral" *ngIf="m.type === 'NEUTRAL'"><span class="material-symbols-outlined">remove</span></span>
+            <span class="metric-name">{{ m.metricName }}</span>
+          </div>
+
+          <div class="metric-control">
+            <span class="metric-val read-only" *ngIf="!isEditing">{{ m.value }}</span>
+            <input *ngIf="isEditing" type="number" min="0" max="10" step="0.5" [(ngModel)]="m.value" class="metric-input">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMENTARY -->
+    <div class="section-card">
+      <h3 class="section-title">Taktički Komentar</h3>
+      <div *ngIf="!isEditing" class="commentary-view">
+        "{{ report.overallCommentary }}"
+      </div>
+      <textarea *ngIf="isEditing" [(ngModel)]="editData.overallCommentary" rows="5" class="commentary-input"></textarea>
+    </div>
+
+    <!-- EDIT ACTIONS -->
+    <div class="form-actions" *ngIf="isEditing">
+      <button class="btn-secondary" (click)="cancelEdit()">Odustani</button>
+      <button class="btn-primary" (click)="saveEdit()" [disabled]="isSaving">
+        {{ isSaving ? 'Čuvanje...' : 'Sačuvaj izmene' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm">
+  <div class="modal-content confirm-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Potvrda brisanja</h2>
+    </div>
+    <div class="confirm-body">
+      <p>Da li ste sigurni da želite da obrišete ovaj izveštaj? Ova akcija je trajna i uticaće na zbirne sezonske ocene igrača.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeDeleteConfirm()">Odustani</button>
+      <button class="btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Brisanje...' : 'Obriši izveštaj' }}
+      </button>
+    </div>
+  </div>
+</div>

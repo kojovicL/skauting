@@ -13,6 +13,7 @@ import { ScoutManagementComponent } from 'src/app/feature-modules/scouting/compo
 import { ReportCreateComponent } from 'src/app/feature-modules/scouting/components/report-create/report-create.component';
 import { MyReportsComponent } from 'src/app/feature-modules/scouting/components/my-reports/my-reports.component';
 import { PlayerRecommendationComponent } from 'src/app/feature-modules/scouting/components/player-recommendation/player-recommendation.component';
+import { ReportViewComponent } from 'src/app/feature-modules/scouting/components/report-view/report-view.component';
 
 const routes: Routes = [
   { path: '',                     redirectTo: 'login', pathMatch: 'full' },
@@ -22,6 +23,7 @@ const routes: Routes = [
   { path: 'register',            component: RegistrationComponent },
 
   // Skaut/Direktor
+  { path: 'reports/view/:id', component: ReportViewComponent },
 
   // Skaut
   { path: 'scout-dashboard',        component: ScoutDashboardComponent },

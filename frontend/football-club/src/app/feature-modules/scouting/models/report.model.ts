@@ -63,6 +63,7 @@ export interface ValuedMetric {
   metricId: number;
   metricName: string;
   type: string;
+  category: string;
   value: number;
 }
 
