@@ -602,3 +602,147 @@
   vertical-align: middle;
   line-height: 1;
 }
+
+/* Dodatak za "Zvezda" dugme u kartici kampanje */
+.btn-action.star:hover { 
+  border-color: #f39c12; 
+  color: #f39c12; 
+}
+
+/* Stilovi za Recommendations Modal */
+.recommendations-modal {
+  max-width: 650px;
+}
+
+.recommendations-body {
+  padding: 1.5rem;
+  background-color: #fdfdfd;
+  min-height: 250px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.rec-avatar {
+  width: 45px;
+  height: 45px;
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.rec-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #7f8c8d;
+}
+
+.spinner {
+  border: 4px solid rgba(0,0,0,0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border-left-color: #3498db;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #95a5a6;
+}
+.empty-state .large-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Ranking Cards */
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.rec-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.rec-card:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-color: #3498db;
+}
+
+.rec-rank {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #bdc3c7;
+  width: 50px;
+  text-align: center;
+}
+.rec-rank.gold { color: #f1c40f; font-size: 1.8rem; }
+.rec-rank.silver { color: #95a5a6; font-size: 1.6rem; }
+.rec-rank.bronze { color: #d35400; font-size: 1.5rem; }
+
+.rec-info {
+  flex-grow: 1;
+  padding-left: 1rem;
+  border-left: 1px solid #e9ecef;
+  margin-left: 1rem;
+}
+
+.rec-info h4 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.rec-info p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+}
+
+.rec-score {
+  text-align: right;
+  background: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.score-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #27ae60;
+}
+
+.score-label {
+  font-size: 0.75rem;
+  color: #95a5a6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

@@ -23,6 +23,9 @@
             {{ campaign.name }}
           </h2>
           <div class="card-actions">
+            <button class="btn-action star" title="Izvuci preporuke" (click)="openRecommendationsModal(campaign.id, campaign.name, $event)">
+              <span class="material-symbols-outlined">star</span>
+            </button>
             <button class="btn-action edit" title="Izmeni" (click)="openEditModal(campaign)"><span class="material-symbols-outlined">edit</span></button>
             <button *ngIf="activeTab === 'ACTIVE'" class="btn-action end" title="Završi kampanju" (click)="openConfirmModal('END', campaign.id, $event)"><span class="material-symbols-outlined">check</span></button>
             <button class="btn-action delete" title="Obriši" (click)="openConfirmModal('DELETE', campaign.id, $event)"><span class="material-symbols-outlined">delete</span></button>
@@ -204,6 +207,48 @@
       <button class="btn-secondary" (click)="closeConfirmModal()">Odustani</button>
       <button class="btn-danger" *ngIf="confirmAction === 'DELETE'" (click)="executeConfirmAction()">Obriši kampanju</button>
       <button class="btn-primary" *ngIf="confirmAction === 'END'" (click)="executeConfirmAction()">Završi kampanju</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECOMMENDATIONS MODAL -->
+<div class="modal-overlay" *ngIf="isRecommendationsModalOpen">
+  <div class="modal-content recommendations-modal">
+    <h2 class="modal-title">Top 5 Preporuka: {{ selectedCampaignNameForRecommendations }}</h2>
+    
+    <div class="recommendations-body">
+      <div *ngIf="isLoadingRecommendations" class="loading-state">
+        <div class="spinner"></div>
+        <p>Analiziram podatke i rangiram igrače...</p>
+      </div>
+
+      <div *ngIf="!isLoadingRecommendations && campaignRecommendations.length === 0" class="empty-state">
+        <span class="material-symbols-outlined large-icon">person_off</span>
+        <p>Nedovoljno podataka za generisanje preporuka. Skauti moraju prvo uneti ocene za praćene igrače.</p>
+      </div>
+
+      <div *ngIf="!isLoadingRecommendations && campaignRecommendations.length > 0" class="recommendations-list">
+        <div class="rec-card" *ngFor="let rec of campaignRecommendations; let i = index" [routerLink]="['/players', rec.playerId]">
+          <div class="rec-rank" [ngClass]="{'gold': i === 0, 'silver': i === 1, 'bronze': i === 2}">
+            #{{ i + 1 }}
+          </div>
+          <div class="rec-avatar">
+            <img [src]="rec.photoUrl || 'assets/default-avatar.png'" alt="Slika">
+          </div>
+          <div class="rec-info">
+            <h4>{{ rec.name }} {{ rec.surname }}</h4>
+            <p>Izvor: {{ rec.source?.replace('_', ' ') }}</p>
+          </div>
+          <div class="rec-score">
+            <div class="score-value">{{ rec.score | number:'1.1-2' }}</div>
+            <div class="score-label">Zbirni Rezultat</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="closeRecommendationsModal()">Zatvori</button>
     </div>
   </div>
 </div>

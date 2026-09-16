@@ -12,6 +12,7 @@ export interface PlayerRecommendation {
   playerId: number;
   name: string;
   surname: string;
+  photoUrl?: string;
   score: number;
   source: string;
 }

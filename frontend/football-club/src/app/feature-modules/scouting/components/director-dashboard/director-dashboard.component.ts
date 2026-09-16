@@ -4,6 +4,7 @@ import { CampaignService } from 'src/app/feature-modules/scouting/services/campa
 import { OnboardingService } from 'src/app/feature-modules/scouting/services/onboarding.service';
 import { PlayerService } from 'src/app/feature-modules/scouting/services/player.service';
 import { CampaignDetails, MonitoredPlayerBasic, CampaignSave } from 'src/app/feature-modules/scouting/models/campaign.model';
+import { PlayerRecommendation } from 'src/app/feature-modules/scouting/models/recommendation.model';
 
 export interface CandidatePlayer {
   id: number;
@@ -30,6 +31,12 @@ export class DirectorDashboardComponent implements OnInit {
   isEditMode: boolean = false;
   editingCampaignId: number | null = null;
   campaignForm!: FormGroup;
+
+  // --- Recommendations State ---
+  isRecommendationsModalOpen: boolean = false;
+  campaignRecommendations: PlayerRecommendation[] = [];
+  isLoadingRecommendations: boolean = false;
+  selectedCampaignNameForRecommendations: string = '';
 
   // Confirmation Modal State
   showConfirmModal: boolean = false;
@@ -315,5 +322,31 @@ export class DirectorDashboardComponent implements OnInit {
       'Right-Back': 'RB', 'Center-Back': 'CB', 'Goalkeeper': 'GK'
     };
     return map[displayString] || displayString;
+  }
+
+  openRecommendationsModal(campaignId: number, campaignName: string, event: Event): void {
+    event.stopPropagation();
+    this.isRecommendationsModalOpen = true;
+    this.isLoadingRecommendations = true;
+    this.campaignRecommendations = [];
+    this.selectedCampaignNameForRecommendations = campaignName;
+
+    this.campaignService.getCampaignRecommendations(campaignId).subscribe({
+      next: (data) => {
+        // Zadrži samo Top 5
+        this.campaignRecommendations = data.slice(0, 5);
+        this.isLoadingRecommendations = false;
+      },
+      error: (err) => {
+        console.error('Greška pri učitavanju preporuka za kampanju', err);
+        this.isLoadingRecommendations = false;
+      }
+    });
+  }
+
+  closeRecommendationsModal(): void {
+    this.isRecommendationsModalOpen = false;
+    this.campaignRecommendations = [];
+    this.selectedCampaignNameForRecommendations = '';
   }
 }
