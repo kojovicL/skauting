@@ -16,4 +16,5 @@ public interface IReportService {
     ReportDTO getLatestReportByPlayer(Long playerId);
     List<PendingReportMatchDTO> getPendingMatchesForScout(Long scoutId);
     List<UpcomingMatchTaskDTO> getUpcomingMatchTasksForScout(Long scoutId);
+    List<PlayerSearchDTO> getScoutedPlayers(Long scoutId);
 }

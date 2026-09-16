@@ -1,6 +1,8 @@
 package com.football_club.Scouting.repository;
 
 import com.football_club.Scouting.model.Campaign;
+import com.football_club.Scouting.model.enums.CampaignStatus;
+import com.football_club.Scouting.model.enums.Region;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,4 +16,6 @@ public interface CampaignRepository extends JpaRepository<Campaign, Long> {
 
     @Query("SELECT c.director.id FROM Campaign c JOIN c.monitoredPlayers mp WHERE mp.player.id = :playerId")
     List<Long> findDirectorIdsByMonitoredPlayerId(@Param("playerId") Long playerId);
+    List<Campaign> findByStatus(CampaignStatus status);
+    List<Campaign> findByRegionAndStatus(Region region, CampaignStatus status);
 }

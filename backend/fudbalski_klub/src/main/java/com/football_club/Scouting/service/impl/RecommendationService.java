@@ -58,6 +58,7 @@ public class RecommendationService implements IRecommendationService {
                     report.getPlayer().getId(),
                     report.getPlayer().getName(),
                     report.getPlayer().getSurname(),
+                    report.getPlayer().getPhotoUrl(),
                     finalScore,
                     "SEASONAL_PERCENTILE"
             ));

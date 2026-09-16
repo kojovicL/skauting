@@ -1,47 +1,73 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/env/environment';
-import { Report, ReportSave, ValuedMetric, ValuedMetricSave } from '../models/report.model';
+import { 
+  PendingReportMatch, 
+  Report, 
+  ReportDraftData, 
+  ReportSave, 
+  UpcomingMatchTask 
+} from '../models/report.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ReportService {
-  private baseReportsUrl = `${environment.apiHost}reports`;
-  private baseValuedMetricsUrl = `${environment.apiHost}valued-metrics`;
+  private baseUrl = `${environment.apiHost}reports`;
 
   constructor(private http: HttpClient) {}
 
-  getLatestReportForPlayer(playerId: number): Observable<Report> {
-    return this.http.get<Report>(`${this.baseReportsUrl}/player/${playerId}/latest`);
+  getReportDraftData(playerId: number, matchId: number): Observable<ReportDraftData> {
+    let params = new HttpParams()
+      .set('playerId', playerId.toString())
+      .set('matchId', matchId.toString());
+    return this.http.get<ReportDraftData>(`${this.baseUrl}/draft-data`, { params });
   }
 
-  createReport(dto: ReportSave): Observable<any> {
-    return this.http.post<any>(`${this.baseReportsUrl}`, dto);
+  createReport(dto: ReportSave): Observable<Report> {
+    return this.http.post<Report>(this.baseUrl, dto);
   }
 
   getReportById(id: number): Observable<Report> {
-    return this.http.get<Report>(`${this.baseReportsUrl}/${id}`);
+    return this.http.get<Report>(`${this.baseUrl}/${id}`);
+  }
+
+  getAllReports(): Observable<Report[]> {
+    return this.http.get<Report[]>(this.baseUrl);
   }
 
   updateReport(id: number, dto: ReportSave): Observable<Report> {
-    return this.http.put<Report>(`${this.baseReportsUrl}/${id}`, dto);
+    return this.http.put<Report>(`${this.baseUrl}/${id}`, dto);
   }
 
-  createValuedMetrics(dtos: ValuedMetricSave[]): Observable<any> {
-    return this.http.post<any>(`${this.baseValuedMetricsUrl}/bulk`, dtos);
-  }
-
-  updateValuedMetrics(dtos: ValuedMetricSave[]): Observable<ValuedMetric[]> {
-    return this.http.put<ValuedMetric[]>(`${this.baseValuedMetricsUrl}/bulk`, dtos); 
+  deleteReport(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
   getMyReports(): Observable<Report[]> {
-    return this.http.get<Report[]>(`${this.baseReportsUrl}/my`);
+    return this.http.get<Report[]>(`${this.baseUrl}/my`);
+  }
+
+  getReportsByScout(scoutId: number): Observable<Report[]> {
+    return this.http.get<Report[]>(`${this.baseUrl}/scout/${scoutId}`);
   }
 
   getReportsByPlayer(playerId: number): Observable<Report[]> {
-    return this.http.get<Report[]>(`${this.baseReportsUrl}/player/${playerId}`);
+    return this.http.get<Report[]>(`${this.baseUrl}/player/${playerId}`);
+  }
+
+  getLatestReportForPlayer(playerId: number): Observable<Report> {
+    return this.http.get<Report>(`${this.baseUrl}/player/${playerId}/latest`);
+  }
+
+  getPendingMatches(): Observable<PendingReportMatch[]> {
+    return this.http.get<PendingReportMatch[]>(`${this.baseUrl}/pending-matches`);
+  }
+
+  getUpcomingTasks(): Observable<UpcomingMatchTask[]> {
+    return this.http.get<UpcomingMatchTask[]>(`${this.baseUrl}/upcoming-tasks`);
+  }
+
+  getMyScoutedPlayers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/my/players`);
   }
 }

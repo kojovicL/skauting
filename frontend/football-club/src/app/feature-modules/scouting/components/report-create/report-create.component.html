@@ -1,0 +1,108 @@
+<div class="report-container">
+  
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Učitavanje podataka o utakmici i igraču...</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMessage && !draftData" class="error-banner">
+    {{ errorMessage }}
+    <button class="btn-secondary mt-2" (click)="cancel()">Nazad na kontrolnu tablu</button>
+  </div>
+
+  <div *ngIf="draftData" class="report-content">
+    
+    <!-- HEADER (Player & Match Info) -->
+    <div class="report-header">
+      <div class="header-player">
+        <img [src]="draftData.player.photoUrl || 'assets/default-avatar.png'" alt="Igrač">
+        <div class="hp-info">
+          <h1>{{ draftData.player.name }} {{ draftData.player.surname }}</h1>
+          <p><span class="material-symbols-outlined icon-inline">sports_soccer</span> {{ draftData.player.currentTeamName }}</p>
+        </div>
+      </div>
+      
+      <div class="header-match">
+        <div class="match-league">{{ draftData.match.leagueName }}</div>
+        <div class="match-teams">
+          <img [src]="draftData.match.homeTeamLogo" alt="Home">
+          <span class="score">{{ draftData.match.homeGoals }} - {{ draftData.match.awayGoals }}</span>
+          <img [src]="draftData.match.awayTeamLogo" alt="Away">
+        </div>
+        <div class="match-date">{{ draftData.match.date | date:'dd.MM.yyyy. HH:mm' }}</div>
+      </div>
+    </div>
+
+    <!-- CORE STATS (Read Only) -->
+    <div class="section-card core-stats">
+      <h3 class="section-title">Osnovne Performanse (API Podaci)</h3>
+      <div class="stats-grid" *ngIf="draftData.apiStat">
+        <div class="stat-box"><span>Minutaža</span><strong>{{ draftData.apiStat.minutesPlayed }}'</strong></div>
+        <div class="stat-box"><span>Golovi</span><strong>{{ draftData.apiStat.goals }}</strong></div>
+        <div class="stat-box"><span>Asistencije</span><strong>{{ draftData.apiStat.assists }}</strong></div>
+        <div class="stat-box rating-box"><span>API Ocena</span><strong>{{ draftData.apiStat.rawRating | number:'1.1-2' }}</strong></div>
+      </div>
+      <div *ngIf="!draftData.apiStat" class="no-api-data">
+        Nema dostupnih statističkih podataka iz spoljnih API sistema za ovu utakmicu. Sve metrike morate uneti ručno.
+      </div>
+    </div>
+
+    <!-- GROUPED METRICS GRID -->
+    <div class="grouped-metrics-grid">
+      <div class="section-card metrics-card" *ngFor="let group of groupedMetrics">
+        <h3 class="section-title">{{ group.categoryName }}</h3>
+        
+        <div class="metric-row" *ngFor="let m of group.metrics">
+          <div class="metric-info">
+            
+            <!-- TIP METRIKE (Ikonice) -->
+            <span class="type-icon positive" *ngIf="m.type === 'POSITIVE'" title="Pozitivna metrika (veće je bolje)">
+              <span class="material-symbols-outlined">trending_up</span>
+            </span>
+            <span class="type-icon negative" *ngIf="m.type === 'NEGATIVE'" title="Negativna metrika (manje je bolje)">
+              <span class="material-symbols-outlined">trending_down</span>
+            </span>
+            <span class="type-icon neutral" *ngIf="m.type === 'NEUTRAL'" title="Neutralna metrika">
+              <span class="material-symbols-outlined">remove</span>
+            </span>
+
+            <span class="metric-name">{{ m.metricName }}</span>
+          </div>
+
+          <div class="metric-control">
+            <!-- Prikaz za API metrike (Read-only) -->
+            <span class="metric-val read-only" *ngIf="m.isApi" title="Automatski preuzeto sa API-ja">{{ m.value }}</span>
+            <!-- Prikaz za ručne metrike (Input) -->
+            <input *ngIf="!m.isApi" type="number" min="0" max="10" step="0.5" [(ngModel)]="m.value" class="metric-input" title="Ocenite od 0 do 10">
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+    <!-- COMMENTARY (Required) -->
+    <div class="section-card">
+      <h3 class="section-title">Taktički Komentar *</h3>
+      <textarea 
+        [(ngModel)]="overallCommentary" 
+        rows="5" 
+        class="commentary-input" 
+        placeholder="Unesite vaša zapažanja, analizu performansi, nivo discipline i zalaganje na terenu..."
+        [class.invalid]="errorMessage && overallCommentary.trim().length < 5">
+      </textarea>
+      
+      <div *ngIf="errorMessage" class="error-text mt-2">
+        {{ errorMessage }}
+      </div>
+    </div>
+
+    <!-- FORM ACTIONS -->
+    <div class="form-actions">
+      <button class="btn-secondary" (click)="cancel()">Odustani</button>
+      <button class="btn-primary" (click)="submitReport()" [disabled]="isSaving">
+        {{ isSaving ? 'Čuvanje izveštaja...' : 'Sačuvaj i Pošalji' }}
+      </button>
+    </div>
+
+  </div>
+</div>

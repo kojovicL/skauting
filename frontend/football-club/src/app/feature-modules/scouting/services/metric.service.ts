@@ -2,30 +2,31 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/env/environment';
-import { GameMetric, Metric } from '../models/metric.model';
+import { Metric, MetricSave } from '../models/metric.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class MetricService {
-  private baseMetricsUrl = `${environment.apiHost}metrics`;
-  private baseGameMetricsUrl = `${environment.apiHost}game-metrics`;
+  private baseUrl = `${environment.apiHost}metrics`;
 
   constructor(private http: HttpClient) {}
 
+  createMetric(dto: MetricSave): Observable<Metric> {
+    return this.http.post<Metric>(this.baseUrl, dto);
+  }
+
+  getMetricById(id: number): Observable<Metric> {
+    return this.http.get<Metric>(`${this.baseUrl}/${id}`);
+  }
+
   getAllMetrics(): Observable<Metric[]> {
-    return this.http.get<Metric[]>(`${this.baseMetricsUrl}`);
+    return this.http.get<Metric[]>(this.baseUrl);
   }
 
-  createMetric(metric: { name: string; category: string }): Observable<Metric> {
-    return this.http.post<Metric>(`${this.baseMetricsUrl}`, metric);
+  updateMetric(id: number, dto: MetricSave): Observable<Metric> {
+    return this.http.put<Metric>(`${this.baseUrl}/${id}`, dto);
   }
 
-  updateMetric(id: number, metric: { name: string; category: string }): Observable<Metric> {
-    return this.http.put<Metric>(`${this.baseMetricsUrl}/${id}`, metric);
-  }
-
-  getLastFiveGamesMetrics(playerId: number): Observable<GameMetric[]> {
-    return this.http.get<GameMetric[]>(`${this.baseGameMetricsUrl}/player/${playerId}/recent`);
+  deleteMetric(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 }

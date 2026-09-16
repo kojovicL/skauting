@@ -2,63 +2,171 @@
   <div class="navbar-brand" (click)="onLogoClicked()">
     Fudbalski Klub
   </div>
-
+  
   <div class="navbar-actions">
-    <ng-container *ngIf="isLoggedIn && (isHeadCoach || isAssistantCoach)">
-      <button class="nav-btn" (click)="router.navigate(['/clubs'])">Klub i Roster</button>
-    </ng-container>
+    <ng-container *ngIf="(isLoggedIn && userRole === 'ROLE_SCOUT')">
+      <button class="nav-btn" (click)="openRequestsModal()">Dostupni zadaci</button>
+      <button class="nav-btn" (click)="onReportsClick()">Izveštaji</button>
+      
+      <!-- Notifications Bell & Popup -->
+      <div class="notification-wrapper">
+        <button class="icon-btn" (click)="toggleNotifications($event)">
+          <!-- Zvonce SVG Ikona -->
+          <svg xmlns="http://www.w3.org/-svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/>
+          </svg>
+          <span class="notification-badge" *ngIf="notifications.length > 0">
+            {{ notifications.length > 99 ? '99+' : notifications.length }}
+          </span>
+        </button>
 
-    <ng-container *ngIf="isLoggedIn && isAssistantCoach">
-      <button class="nav-btn" (click)="router.navigate(['/add-player'])">Dodavanje igrača</button>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && (isHeadCoach || isAssistantCoach || isStatistician)">
-      <div class="dropdown">
-        <button class="nav-btn">Mečevi ▾</button>
-        <div class="dropdown-content">
-          <a (click)="router.navigate(['/matches'])">Odigrani mečevi</a>
-          <a (click)="router.navigate(['/upcoming-matches'])">Predstojeći mečevi</a>
+        <!-- Popup Menu -->
+        <div class="notification-popup" *ngIf="showNotifications" (click)="$event.stopPropagation()">
+          <div class="popup-header">Vaša obaveštenja</div>
+          
+          <div class="popup-body">
+            <div class="no-notif" *ngIf="notifications.length === 0">
+              Nemate novih nepročitanih obaveštenja.
+            </div>
+            
+            <div class="notif-item" *ngFor="let notif of notifications" (click)="onNotificationClick(notif, $event)">
+              <div class="notif-title">{{ notif.title }}</div>
+              <div class="notif-message">{{ notif.message }}</div>
+              <div class="notif-time">{{ notif.createdAt | date:'dd.MM.yyyy. HH:mm' }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </ng-container>
 
-    <ng-container *ngIf="isLoggedIn && (isHeadCoach || isStatistician)">
-      <button class="nav-btn" (click)="router.navigate(['/live-match-finder'])">Utakmica uživo</button>
-    </ng-container>
-
-    <ng-container *ngIf="(isLoggedIn && userRole === 'ROLE_SCOUT')">
-      <button class="nav-btn" (click)="onReportsClick()">Izveštaji</button>
-      <button class="nav-btn" (click)="onRequestsClick()">Zahtevi</button>
-    </ng-container>
-
     <ng-container *ngIf="(isLoggedIn && userRole === 'ROLE_SPORTS_DIRECTOR')">
+      <button class="nav-btn" (click)="onScoutsClick()">Skauti</button>
+      <button class="nav-btn" (click)="openLeagueModal()">Koeficijenti Liga</button>
       <button class="nav-btn" (click)="onMetricsClick()">Metrike</button>
-      <button class="nav-btn" (click)="onWishlistsClick()">Liste Želja</button>
-      <button class="nav-btn" (click)="onRequestsClick()">Zahtevi</button>
       <button class="nav-btn" (click)="onPlayerRecommendationClick()">Preporuka Igrača</button>
       <button class="nav-btn" (click)="onSeachTemplatesClick()">Šabloni Preporuke</button>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && userRole === 'ROLE_BUYER'">
-      <button class="nav-btn" (click)="router.navigate(['/search-matches'])">Kupovina karata</button>
-      <button class="nav-btn" (click)="router.navigate(['/my-tickets'])">Moje karte</button>
-    </ng-container>
-
-    <ng-container *ngIf="isLoggedIn && userRole === 'ROLE_ADMIN'">
-      <button class="nav-btn" (click)="router.navigate(['/zones'])">Zone</button>
-      <button class="nav-btn" (click)="router.navigate(['/ticket-types'])">Tipovi karata</button>
-      <button class="nav-btn" (click)="router.navigate(['/pricing-rules'])">Cenovnik</button>
-      <button class="nav-btn" (click)="router.navigate(['/game-zone-prices'])">Cene po utakmici</button>
-      <button class="nav-btn" (click)="router.navigate(['/price-change-log'])">Istorija cena</button>
-      <button class="nav-btn" (click)="router.navigate(['/ticket-analytics'])">Analitika</button>
     </ng-container>
 
     <ng-container *ngIf="isLoggedIn">
       <button class="nav-btn logout-btn" (click)="onLogoutClick()">Izloguj Se</button>
     </ng-container>
-
+    
     <ng-container *ngIf="!isLoggedIn">
       <button class="nav-btn login-btn" (click)="onLoginClick()">Uloguj Se</button>
     </ng-container>
   </div>
 </nav>
+
+<!-- LEAGUE MULTIPLIERS MODAL -->
+<div class="modal-overlay" *ngIf="isLeagueModalOpen">
+  <div class="modal-content league-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Podešavanje koeficijenata liga</h2>
+      <button class="btn-close-icon" (click)="closeLeagueModal()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-subtitle">Izmenite množitelj težine za svaku ligu. Ovi koeficijenti direktno utiču na kalkulaciju konačne ocene igrača u sistemu preporuka.</p>
+      
+      <div class="table-scroll-container">
+        <table class="leagues-table">
+          <thead>
+            <tr>
+              <th>Naziv Lige</th>
+              <th class="text-right">Koeficijent Težine</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let league of leagues">
+              <td class="league-name">{{ league.name }}</td>
+              <td class="text-right">
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  min="0" 
+                  [(ngModel)]="modifiedMultipliers[league.id]" 
+                  class="multiplier-input">
+              </td>
+            </tr>
+            <tr *ngIf="leagues.length === 0">
+              <td colspan="2" class="empty-state">Učitavanje liga...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="nav-btn" (click)="closeLeagueModal()">Odustani</button>
+      <button class="nav-btn btn-save" (click)="saveLeagueMultipliers()" [disabled]="isSavingLeagues">
+        {{ isSavingLeagues ? 'Čuvanje...' : 'Sačuvaj izmene' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SCOUT REQUESTS MODAL -->
+<div class="modal-overlay" *ngIf="isRequestsModalOpen">
+  <div class="modal-content requests-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Dostupni zadaci u vašem regionu</h2>
+      <button class="btn-close-icon" (click)="closeRequestsModal()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-subtitle">Ovde se nalaze svi neraspoređeni igrači iz vašeg regiona za aktivne kampanje. Preuzmite zadatak da biste započeli praćenje i unosili izveštaje.</p>
+      
+      <div *ngIf="isLoadingRequests" class="empty-state">Učitavanje zadataka...</div>
+      <div *ngIf="!isLoadingRequests && pendingRequests.length === 0" class="empty-state">Trenutno nema dostupnih zadataka u vašem regionu.</div>
+
+      <div class="requests-list" *ngIf="!isLoadingRequests && pendingRequests.length > 0">
+        <div class="request-card" *ngFor="let req of pendingRequests">
+          
+          <div class="req-avatar">
+            <img [src]="req.photoUrl || 'assets/default-avatar.png'" alt="Slika igrača">
+          </div>
+          
+          <div class="req-info">
+            <h4>{{ req.playerName }} {{ req.playerSurname }}</h4>
+            <div class="req-team"><span class="material-symbols-outlined icon-sm">sports_soccer</span> {{ req.currentTeamName }}</div>
+            <div class="req-tags">
+              <span class="badge position-badge">{{ req.position }}</span>
+              <span class="badge date-badge">Godine: {{ req.playerAge }}</span>
+            </div>
+          </div>
+          
+          <div class="req-meta-col">
+            <div class="req-campaign"><span class="material-symbols-outlined icon-sm">campaign</span> {{ req.campaignName }}</div>
+            <div class="req-date">Dodato: {{ req.requestDate | date:'dd.MM.yyyy.' }}</div>
+            <div class="req-region">Region: {{ req.region }}</div>
+            
+            <button class="btn-primary nav-btn" (click)="openClaimConfirmModal(req.id, $event)">Preuzmi zadatak</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="nav-btn" (click)="closeRequestsModal()">Zatvori</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLAIM CONFIRMATION MODAL -->
+<div class="modal-overlay" *ngIf="showClaimConfirmModal" style="z-index: 2001;">
+  <div class="modal-content confirm-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Potvrda preuzimanja</h2>
+    </div>
+    <div class="confirm-body" style="padding: 1.5rem; text-align: center;">
+      <p style="color: #2c3e50; line-height: 1.5; margin-bottom: 1rem;">Da li ste sigurni da želite da preuzmete ovaj zadatak? Nakon preuzimanja, igrač će se trajno pojaviti na vašoj kontrolnoj tabli i preuzećete odgovornost za njegov skauting u ovoj kampanji.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary nav-btn" (click)="closeClaimConfirmModal()">Odustani</button>
+      <button class="btn-primary btn-save" (click)="executeClaimRequest()" [disabled]="isClaimingRequest">
+        {{ isClaimingRequest ? 'Preuzimanje...' : 'Potvrdi' }}
+      </button>
+    </div>
+  </div>
+</div>

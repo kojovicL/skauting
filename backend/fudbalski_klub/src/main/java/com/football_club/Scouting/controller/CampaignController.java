@@ -42,4 +42,52 @@ public class CampaignController {
     public ResponseEntity<List<PlayerRecommendationDTO>> getCampaignRecommendations(@PathVariable Long id) {
         return ResponseEntity.ok(campaignService.getCampaignRecommendations(id));
     }
+
+    @GetMapping("/my/active")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<List<CampaignDetailsDTO>> getMyActiveCampaigns(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(campaignService.getMyActiveCampaignsDetails(userDetails.getId()));
+    }
+
+    @GetMapping("/my/completed")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<List<CampaignDetailsDTO>> getMyCompletedCampaigns(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(campaignService.getMyCompletedCampaignsDetails(userDetails.getId()));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<Void> updateCampaign(@PathVariable Long id, @RequestBody CampaignSaveDTO dto) {
+        Campaign campaign = campaignService.getCampaignById(id);
+        campaign.setName(dto.getName());
+        campaign.setDescription(dto.getDescription());
+        campaign.setTargetPosition(dto.getTargetPosition());
+        campaign.setStartDate(dto.getStartDate());
+        campaign.setEndDate(dto.getEndDate());
+        if (dto.getRegion() != null) {
+            campaign.setRegion(dto.getRegion());
+        }
+        campaignService.updateCampaign(id, campaign);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<Void> deleteCampaign(@PathVariable Long id) {
+        campaignService.deleteCampaign(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/end")
+    @PreAuthorize("hasAnyRole('SPORTS_DIRECTOR', 'ADMIN')")
+    public ResponseEntity<Void> endCampaign(@PathVariable Long id) {
+        campaignService.endCampaign(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/active/my-region")
+    @PreAuthorize("hasAnyRole('SCOUT', 'ADMIN')")
+    public ResponseEntity<List<CampaignDetailsDTO>> getActiveCampaignsForScoutRegion(@AuthenticationPrincipal User userDetails) {
+        return ResponseEntity.ok(campaignService.getActiveCampaignsForScout(userDetails));
+    }
 }

@@ -122,12 +122,14 @@ export class MetricsDashboardComponent implements OnInit {
   }
 
   formatCategoryName(category: string): string {
-    if (!category) return '';
-    return category
-      .toLowerCase()
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    const dict: any = {
+      'PASSING_AND_PROGRESSION': 'Dodavanja i Progresija',
+      'ATTACKING_AND_OUTPUT': 'Napad i Realizacija',
+      'DEFENSIVE_ACTIONS': 'Defanzivne Akcije',
+      'PHYSICAL': 'Fizičke Performanse',
+      'IMPACT_AND_EFFICIENCY': 'Uticaj i Efikasnost'
+    };
+    return dict[category] || category;
   }
 
   formatTypeName(type: string): string {

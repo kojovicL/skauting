@@ -9,6 +9,7 @@ import com.football_club.Scouting.model.Player;
 import com.football_club.Scouting.model.SeasonalReport;
 import com.football_club.Scouting.model.enums.CampaignStatus;
 import com.football_club.Scouting.repository.CampaignRepository;
+import com.football_club.Scouting.repository.ScoutRequestRepository;
 import com.football_club.Scouting.repository.SeasonalReportRepository;
 import com.football_club.Scouting.service.ICampaignService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class CampaignService implements ICampaignService {
     private final CampaignRepository campaignRepository;
     private final IPlayerOnboardingService playerOnboardingService;
     private final SeasonalReportRepository seasonalReportRepository;
+    private final ScoutRequestRepository scoutRequestRepository;
 
     @Override
     @Transactional
@@ -53,12 +55,49 @@ public class CampaignService implements ICampaignService {
                 try {
                     OnboardPlayerRequest req = new OnboardPlayerRequest(apiId, savedCampaign.getId(), null);
                     playerOnboardingService.onboardPlayer(req, owner);
+
                 } catch (Exception e) {
                     throw new RuntimeException("Neuspešno dodavanje kandidata " + apiId + ": " + e.getMessage(), e);
                 }
             }
         }
         return savedCampaign;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CampaignDetailsDTO> getMyCompletedCampaignsDetails(Long directorId) {
+        return campaignRepository.findByDirectorId(directorId).stream()
+                .filter(c -> c.getStatus() == CampaignStatus.COMPLETED)
+                .map(this::mapToCampaignDetailsDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<CampaignDetailsDTO> getActiveCampaignsForScout(User scout) {
+        if (scout.getRegion() == null) {
+            return Collections.emptyList();
+        }
+
+        List<Campaign> campaigns;
+        if (scout.getRegion() == Region.GLOBAL) {
+            campaigns = campaignRepository.findByStatus(CampaignStatus.ACTIVE);
+        } else {
+            campaigns = campaignRepository.findByRegionAndStatus(scout.getRegion(), CampaignStatus.ACTIVE);
+        }
+
+        return campaigns.stream()
+                .map(this::mapToCampaignDetailsDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void endCampaign(Long id) {
+        Campaign campaign = getCampaignById(id);
+        campaign.setStatus(CampaignStatus.COMPLETED);
+        campaignRepository.save(campaign);
     }
 
     @Override
@@ -93,14 +132,30 @@ public class CampaignService implements ICampaignService {
         if (!campaignRepository.existsById(id)) {
             throw new NoSuchElementException("Kampanja sa ID-em " + id + " ne postoji.");
         }
+        scoutRequestRepository.deleteByCampaignId(id);
         campaignRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<CampaignDetailsDTO> getMyActiveCampaignsDetails(Long directorId) {
+        // Fetch campaigns by director and filter only the active ones
+        return campaignRepository.findByDirectorId(directorId).stream()
+                .filter(c -> c.getStatus() == CampaignStatus.ACTIVE)
+                .map(this::mapToCampaignDetailsDTO)
+                .collect(Collectors.toList());
+    }
+
+    // Refactor your existing getCampaignDetailsById to use this helper
     @Transactional(readOnly = true)
     public CampaignDetailsDTO getCampaignDetailsById(Long id) {
         Campaign campaign = campaignRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Kampanja nije pronađena."));
+        return mapToCampaignDetailsDTO(campaign);
+    }
 
+    // New private helper method extracted from your original code
+    private CampaignDetailsDTO mapToCampaignDetailsDTO(Campaign campaign) {
         List<CampaignDetailsDTO.MonitoredPlayerBasicDTO> players = campaign.getMonitoredPlayers().stream()
                 .map(mp -> {
                     Player p = mp.getPlayer();
@@ -118,7 +173,7 @@ public class CampaignService implements ICampaignService {
                 .id(campaign.getId())
                 .name(campaign.getName())
                 .description(campaign.getDescription())
-                .targetPosition(campaign.getTargetPosition())
+                .targetPosition(campaign.getTargetPosition().getDisplayName())
                 .status(campaign.getStatus())
                 .startDate(campaign.getStartDate())
                 .endDate(campaign.getEndDate())
@@ -174,6 +229,7 @@ public class CampaignService implements ICampaignService {
                     report.getPlayer().getId(),
                     report.getPlayer().getName(),
                     report.getPlayer().getSurname(),
+                    report.getPlayer().getPhotoUrl(),
                     finalScore,
                     "CAMPAIGN_AVERAGE"
             ));
@@ -183,4 +239,6 @@ public class CampaignService implements ICampaignService {
                 .sorted(Comparator.comparingDouble(PlayerRecommendationDTO::getScore).reversed())
                 .collect(Collectors.toList());
     }
+
+
 }

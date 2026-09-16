@@ -1,8 +1,7 @@
 import { Metric } from "./metric.model";
-import { Report } from "./report.model";
 
 export interface WeightedMetric {
-  metricdId: number;
+  metricId: number;
   weight: number;
 }
 
@@ -15,14 +14,9 @@ export interface PlayerRecommendation {
   playerId: number;
   name: string;
   surname: string;
+  photoUrl?: string;
   score: number;
   source: string;
-  position?: string;
-  dateOfBirth?: string;
-}
-
-export interface ShownRecommendation extends PlayerRecommendation {
-  latestReport?: Report | null;
 }
 
 export interface SelectedMetric {

@@ -32,4 +32,6 @@ public interface MonitoredPlayerRepository extends JpaRepository<MonitoredPlayer
           AND c.status = com.football_club.Scouting.model.enums.CampaignStatus.ACTIVE
     """)
     List<MonitoredPlayer> findActiveByScoutId(@Param("scoutId") Long scoutId);
+    @Query("SELECT COUNT(mp) FROM MonitoredPlayer mp WHERE mp.scout.id = :scoutId AND mp.campaign.status = 'ACTIVE'")
+    long countActiveByScoutId(@Param("scoutId") Long scoutId);
 }

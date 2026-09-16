@@ -1,10 +1,9 @@
 import { RoleEnum } from './user.model';
 export interface Registration {
-    name: string;
+  name: string;
   surname: string;
   email: string;
   username: string;
   password: string;
   role?: RoleEnum;
-  clubId?: number; 
 }

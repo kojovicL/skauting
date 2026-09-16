@@ -66,14 +66,12 @@ export class AuthService {
 
     // Mapiramo podatke iz JWT claims-a u naš User interfejs
     const user: User = {
-      id: Number(decodedToken.id),
+      id: Number(decodedToken.key),
       // Spring Security obično stavlja username u claim 'sub' (subject), ali fallback na 'username'
       username: decodedToken.sub || decodedToken.username,
       email: decodedToken.email || '',
       isActive: true, // Čim ima validan token, aktivan je
       role: decodedToken.role as RoleEnum, // Bekend treba da upakuje ulogu pod 'role' claim
-      // Izdvajamo clubId direktno iz tokena, ako postoji
-      clubId: decodedToken.clubId ? Number(decodedToken.clubId) : undefined
     };
 
     this.user$.next(user);

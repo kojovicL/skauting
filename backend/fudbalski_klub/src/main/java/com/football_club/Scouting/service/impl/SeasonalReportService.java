@@ -47,6 +47,11 @@ public class SeasonalReportService implements ISeasonalReportService {
         return seasonalReportRepository.save(report);
     }
 
+    @Transactional(readOnly = true)
+    public SeasonalReportDTO getSeasonalReportDTOById(Long id) {
+        return mapToDTO(getSeasonalReportById(id));
+    }
+
     @Override
     @Transactional
     public void deleteSeasonalReport(Long id) {
@@ -96,6 +101,9 @@ public class SeasonalReportService implements ISeasonalReportService {
                 .source(report.getSource())
                 .avgScoutScore(report.getAvgScoutScore())
                 .metrics(metricDTOs)
+                .seasonSummary(report.getSeasonSummary())
+                .playerPhotoUrl(report.getPlayer().getPhotoUrl())
+                .playerPosition(report.getPlayer().getPosition() != null ? report.getPlayer().getPosition().name() : null)
                 .build();
     }
 }

@@ -1,46 +1,44 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ScoutingPlayerListComponent } from './components/scouting-player-list/scouting-player-list.component';
-import { MetricsComponent } from './components/metrics/metrics.component';
 import { RouterModule } from '@angular/router';
-import { CreateReportComponent } from './components/create-report/create-report.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { EditReportComponent } from './components/edit-report/edit-report.component';
-import { MyReportsComponent } from './components/my-reports/my-reports.component';
-import { ViewReportComponent } from './components/view-report/view-report.component';
-import { ScoutRequestModalComponent } from './components/scout-request-modal/scout-request-modal.component';
-import { ViewPlayerComponent } from './components/player-details/view-player.component';
 import { MetricsDashboardComponent } from './components/metrics-dashboard/metrics-dashboard.component';
-import { WishlistsComponent } from './components/wishlists/wishlists.component';
-import { ScoutingRequestsComponent } from './components/scouting-requests/scouting-requests.component';
-import { PlayerRecommendationComponent } from './components/player-recommendation/player-recommendation.component';
 import { SearchTemplateManagementComponent } from './components/search-template-management/search-template-management.component';
-import { PlayerComparisonComponent } from './components/player-comparison/player-comparison.component';
+import { DirectorDashboardComponent } from './components/director-dashboard/director-dashboard.component';
+import { ScoutDashboardComponent } from './components/scout-dashboard/scout-dashboard.component';
+import { ScoutManagementComponent } from './components/scout-management/scout-management.component';
+import { ReportCreateComponent } from './components/report-create/report-create.component';
+import { MyReportsComponent } from './components/my-reports/my-reports.component';
+import { PlayerRecommendationComponent } from './components/player-recommendation/player-recommendation.component';
+import { ReportViewComponent } from './components/report-view/report-view.component';
+import { SeasonalReportViewComponent } from './components/seasonal-report-view/seasonal-report-view.component';
+import { NgChartsModule } from 'ng2-charts';
+import { MarkdownModule } from 'ngx-markdown';
+import { PlayerViewComponent } from './components/player-view/player-view.component';
 
 
 
 @NgModule({
   declarations: [
-    ScoutingPlayerListComponent,
-    MetricsComponent,
-    CreateReportComponent,
-    EditReportComponent,
-    MyReportsComponent,
-    ViewReportComponent,
-    ScoutRequestModalComponent,
-    ViewPlayerComponent,
     MetricsDashboardComponent,
-    WishlistsComponent,
-    ScoutingRequestsComponent,
-    PlayerRecommendationComponent,
     SearchTemplateManagementComponent,
-    PlayerComparisonComponent,
+    DirectorDashboardComponent,
+    ScoutDashboardComponent,
+    ScoutManagementComponent,
+    ReportCreateComponent,
+    MyReportsComponent,
+    PlayerRecommendationComponent,
+    ReportViewComponent,
+    SeasonalReportViewComponent,
+    PlayerViewComponent,
   ],
   imports: [
     CommonModule,
     RouterModule,
     ReactiveFormsModule,
-    FormsModule
+    FormsModule,
+    NgChartsModule,
+    MarkdownModule.forChild()
   ]
 })
 export class ScoutingModule { }

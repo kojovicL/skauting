@@ -4,9 +4,11 @@ import com.football_club.Scouting.model.ScoutRequest;
 import com.football_club.Scouting.model.enums.RequestStatus;
 import com.football_club.Scouting.model.enums.Region;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,4 +57,9 @@ public interface ScoutRequestRepository extends JpaRepository<ScoutRequest, Long
         ORDER BY sr.requestDate DESC
     """)
     List<ScoutRequest> findByRegionWithDetails(@Param("region") Region region);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM ScoutRequest sr WHERE sr.campaign.id = :campaignId")
+    void deleteByCampaignId(@Param("campaignId") Long campaignId);
 }

@@ -3,12 +3,8 @@ import { Router } from '@angular/router';
 import { MetricService } from '../../services/metric.service';
 import { Metric } from '../../models/metric.model';
 import { RecommendationService } from '../../services/recommendation.service';
-import { SelectedMetric, ShownRecommendation } from '../../models/recommendation.model';
-import { RecommendationStateService } from '../../services/recommendation-state.service';
-import { PlayerService } from 'src/app/feature-modules/match/services/player.service';
-import { ReportService } from '../../services/report.service';
+import { SelectedMetric, PlayerRecommendation, RecommendationRequest } from '../../models/recommendation.model';
 import { SearchTemplate, SearchTemplateSave } from '../../models/search-template.model';
-import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { SearchTemplateService } from '../../services/search-template.service';
 
 @Component({
@@ -18,31 +14,43 @@ import { SearchTemplateService } from '../../services/search-template.service';
 })
 export class PlayerRecommendationComponent implements OnInit {
   allMetrics: Metric[] = [];
-  showModal: boolean = false;
   
+  // State
+  selectedPosition: string = 'ST';
+  selectedMetrics: SelectedMetric[] = [];
+  recommendations: PlayerRecommendation[] = [];
+  isLoadingRecommendations: boolean = false;
+
+  // Modals
+  showModal: boolean = false;
   showSaveTemplateModal: boolean = false;
   showLoadTemplateModal: boolean = false;
+  
+  // Templates
   newTemplateName: string = '';
   savedTemplates: SearchTemplate[] = [];
 
-  playerPositions: string[] = [
-    'GOALKEEPER',
-    'CENTER_BACK',
-    'WING_BACK',
-    'DEFENSIVE_MIDFIELDER',
-    'CENTRAL_MIDFIELDER',
-    'ATTACKING_MIDFIELDER',
-    'WIDE_MIDFIELDER',
-    'STRIKER',
-    'WINGER'
+  // Pozicije koje backend prepoznaje (iz tvog Position enum-a)
+  playerPositions = [
+    { value: 'GK', label: 'Goalkeeper' },
+    { value: 'CB', label: 'Center-Back' },
+    { value: 'LB', label: 'Left-Back' },
+    { value: 'RB', label: 'Right-Back' },
+    { value: 'LWB', label: 'Left Wing-Back' },
+    { value: 'RWB', label: 'Right Wing-Back' },
+    { value: 'CDM', label: 'Defensive Midfielder' },
+    { value: 'CM', label: 'Central Midfielder' },
+    { value: 'CAM', label: 'Attacking Midfielder' },
+    { value: 'LM', label: 'Left Midfielder' },
+    { value: 'RM', label: 'Right Midfielder' },
+    { value: 'LW', label: 'Left Winger' },
+    { value: 'RW', label: 'Right Winger' },
+    { value: 'ST', label: 'Striker' }
   ];
 
   constructor(
     private metricService: MetricService,
-    private reportService: ReportService,
     private recommendationService: RecommendationService,
-    private playerService: PlayerService,
-    private stateService: RecommendationStateService,
     private templateService: SearchTemplateService,
     private router: Router
   ) {}
@@ -53,37 +61,9 @@ export class PlayerRecommendationComponent implements OnInit {
     });
   }
 
-  get selectedPosition(): string {
-    return this.stateService.selectedPosition;
-  }
-
-  set selectedPosition(value: string) {
-    this.stateService.selectedPosition = value;
-  }
-
-  get selectedMetrics(): SelectedMetric[] {
-    return this.stateService.selectedMetrics;
-  }
-
-  set selectedMetrics(value: SelectedMetric[]) {
-    this.stateService.selectedMetrics = value;
-  }
-
-  get recommendations(): ShownRecommendation[] {
-    return this.stateService.recommendations;
-  }
-
-  set recommendations(value: ShownRecommendation[]) {
-    this.stateService.recommendations = value;
-  }
-
-  openModal(): void {
-    this.showModal = true;
-  }
-
-  closeModal(): void {
-    this.showModal = false;
-  }
+  // --- Metrics Selection ---
+  openModal(): void { this.showModal = true; }
+  closeModal(): void { this.showModal = false; }
 
   selectMetric(metric: Metric): void {
     this.selectedMetrics.push({ metric, weight: 3 });
@@ -112,14 +92,12 @@ export class PlayerRecommendationComponent implements OnInit {
     return Object.keys(obj);
   }
 
+  // --- Template Management ---
   openSaveTemplateModal(): void {
     this.newTemplateName = '';
     this.showSaveTemplateModal = true;
   }
-
-  closeSaveTemplateModal(): void {
-    this.showSaveTemplateModal = false;
-  }
+  closeSaveTemplateModal(): void { this.showSaveTemplateModal = false; }
 
   saveTemplate(): void {
     if (!this.newTemplateName.trim() || this.selectedMetrics.length === 0) return;
@@ -135,7 +113,6 @@ export class PlayerRecommendationComponent implements OnInit {
     this.templateService.createTemplate(templatePayload).subscribe({
       next: () => {
         this.closeSaveTemplateModal();
-        alert('Šablon uspešno sačuvan!');
       },
       error: (err) => console.error('Greška pri čuvanju šablona:', err)
     });
@@ -150,10 +127,7 @@ export class PlayerRecommendationComponent implements OnInit {
       error: (err) => console.error('Greška pri dobavljanju šablona:', err)
     });
   }
-
-  closeLoadTemplateModal(): void {
-    this.showLoadTemplateModal = false;
-  }
+  closeLoadTemplateModal(): void { this.showLoadTemplateModal = false; }
 
   loadTemplate(template: SearchTemplate): void {
     const loadedMetrics: SelectedMetric[] = [];
@@ -172,64 +146,49 @@ export class PlayerRecommendationComponent implements OnInit {
     this.closeLoadTemplateModal();
   }
 
+  // --- Core Recommendation Logic ---
   submitRecommendation(): void {
     if (this.selectedMetrics.length === 0) return;
+    
+    this.isLoadingRecommendations = true;
+    this.recommendations = [];
 
-    const request = {
+    const request: RecommendationRequest = {
       position: this.selectedPosition,
       metricWeights: this.selectedMetrics.map(sm => ({
-        metricdId: sm.metric.id,
+        metricId: sm.metric.id, // NAPOMENA: Ispravljeno sa metricdId
         weight: sm.weight
       }))
     };
 
-    this.recommendationService.getRecommendations(request).pipe(
-      switchMap((results) => {
-        if (!results || results.length === 0) {
-          return of([]);
-        }
-
-        const playersWithReports = results.map(player => {
-          if (player.playerId === undefined) {
-            return of({...player, latestReport: null });
-          }
-          return this.reportService.getLatestReportForPlayer(player.playerId).pipe(
-            map(report => ({ ...player, latestReport: report })),
-            catchError(() => of({ ...player, latestReport: null }))
-          );
-        });
-        
-        return forkJoin(playersWithReports);
-      })
-    ).subscribe({
-      next: (combinedData) => {
-        this.recommendations = combinedData.sort((a, b) => b.score - a.score);
+    this.recommendationService.getRecommendations(request).subscribe({
+      next: (results) => {
+        this.recommendations = results;
+        this.isLoadingRecommendations = false;
       },
       error: (err) => {
         console.error(err);
+        this.isLoadingRecommendations = false;
       }
     });
   }
 
   viewPlayer(playerId: number | undefined): void {
-    this.router.navigate(['/view-player', playerId]);
-  }
-
-  formatPosition(position: string | undefined): string {
-    if (!position) return '';
-    return position
-      .toLowerCase()
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    if (playerId) {
+      this.router.navigate(['/players', playerId]);
+    }
   }
 
   formatCategoryName(category: string): string {
-    if (!category) return '';
-    return category
-      .toLowerCase()
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    const dict: any = {
+      'PASSING_AND_PROGRESSION': 'Dodavanja i Progresija',
+      'ATTACKING_AND_OUTPUT': 'Napad i Realizacija',
+      'DEFENSIVE_ACTIONS': 'Defanzivne Akcije',
+      'PHYSICAL': 'Fizičke Performanse',
+      'IMPACT_AND_EFFICIENCY': 'Uticaj i Efikasnost',
+      'SEASONAL_PERCENTILE': 'Mesečni presek (Percentili)',
+      'CAMPAIGN_AVERAGE': 'Zbirni presek skauta'
+    };
+    return dict[category] || category;
   }
 }

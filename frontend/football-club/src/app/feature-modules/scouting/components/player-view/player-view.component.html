@@ -1,0 +1,158 @@
+<div class="player-container">
+  
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Učitavanje kompletnog profila igrača...</p>
+  </div>
+
+  <div *ngIf="!isLoading && playerDetails" class="content-wrapper">
+    
+    <!-- HEADER -->
+    <div class="header-card">
+      <img [src]="playerDetails.photoUrl || 'assets/default-avatar.png'" alt="Igrač" class="player-photo">
+      <div class="header-info">
+        <h1>{{ playerDetails.name }} {{ playerDetails.surname }}</h1>
+        <div class="tags-row">
+          <span class="badge pos-badge">{{ playerDetails.position || 'Nepoznato' }}</span>
+          <span class="badge basic-badge">Godine: {{ playerDetails.age }}</span>
+          <span class="badge basic-badge">{{ playerDetails.nationality }}</span>
+        </div>
+      </div>
+      <div class="current-club">
+        <p>Trenutni klub</p>
+        <img *ngIf="playerDetails.currentTeamLogo" [src]="playerDetails.currentTeamLogo" alt="Logo">
+        <h4>{{ playerDetails.currentTeamName }}</h4>
+      </div>
+    </div>
+
+    <div class="two-columns">
+      <!-- TRANSFER HISTORY -->
+      <div class="section-card transfers-section">
+        <h3 class="section-title">Istorija ugovora i transfera</h3>
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Klub</th>
+              <th>Transfer</th>
+              <th>Period</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let contract of contracts">
+              <td class="club-cell">
+                <img [src]="contract.teamLogoUrl" alt="Logo">
+                {{ contract.teamName }}
+              </td>
+              <td>{{ contract.transferType }}</td>
+              <td>{{ contract.startDate | date:'yyyy' }} - {{ contract.endDate ? (contract.endDate | date:'yyyy') : 'Danas' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- RECENT MATCHES -->
+      <div class="section-card recent-matches-section">
+        <h3 class="section-title">Poslednjih 5 utakmica</h3>
+        <div class="matches-list" *ngIf="recentMatches.length > 0">
+          <div class="recent-match-card" *ngFor="let rm of recentMatches">
+            <div class="rm-date">{{ rm.matchDate | date:'dd.MM.' }}</div>
+            <div class="rm-teams">
+              <img [src]="rm.homeTeamLogo" title="{{rm.homeTeamName}}">
+              <span>{{ rm.homeGoals }} - {{ rm.awayGoals }}</span>
+              <img [src]="rm.awayTeamLogo" title="{{rm.awayTeamName}}">
+            </div>
+            <div class="rm-stats">
+              <span class="badge pos-badge">{{ rm.rating | number:'1.1-1' }}</span>
+              <span class="min-played">{{ rm.minutesPlayed }}'</span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="recentMatches.length === 0" class="empty-state">Nema zabeleženih mečeva.</div>
+      </div>
+    </div>
+
+    <!-- CHARTS GRID -->
+    <div class="section-card charts-section" *ngIf="hasCharts">
+      <h3 class="section-title"><span class="material-symbols-outlined">analytics</span> Analitika i Performanse</h3>
+      <div class="charts-grid">
+        <div class="chart-box">
+          <h4>Forma na mečevima (Ocena Skauta)</h4>
+          <div class="canvas-wrapper"><canvas baseChart [data]="formChartData" [options]="baseChartOptions" type="line"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h4>Godišnji Napredak (Prosečna Ocena)</h4>
+          <div class="canvas-wrapper"><canvas baseChart [data]="progressChartData" [options]="baseChartOptions" type="bar"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h4>Efikasnost u napadu (Po 90 min)</h4>
+          <div class="canvas-wrapper"><canvas baseChart [data]="outputChartData" [options]="baseChartOptions" type="bar"></canvas></div>
+        </div>
+        <div class="chart-box radar-box">
+          <h4>Taktika: Presek poslednje 2 sezone</h4>
+          <div class="canvas-wrapper"><canvas baseChart [data]="radarChartData" [options]="radarChartOptions" type="radar"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS ARCHIVE -->
+    <div class="section-card reports-section">
+      <div class="report-tabs">
+        <button [class.active]="activeTab === 'MATCH'" (click)="switchTab('MATCH')">Meč Izveštaji</button>
+        <button [class.active]="activeTab === 'SEASONAL'" (click)="switchTab('SEASONAL')">Sezonski Izveštaji</button>
+      </div>
+
+      <!-- MATCH REPORTS -->
+      <div *ngIf="activeTab === 'MATCH'">
+        <div class="filter-row">
+          <label>Sezona:</label>
+          <select [(ngModel)]="selectedSeason" (change)="filterMatchReports()" [disabled]="availableSeasons.length === 0">
+            <option *ngFor="let year of availableSeasons" [value]="year">{{ year }} / {{ year + 1 }}</option>
+          </select>
+        </div>
+        <div class="reports-list">
+          <div *ngIf="filteredMatchReports.length === 0" class="empty-state">Nema meč izveštaja.</div>
+          <div class="report-list-card" *ngFor="let rep of paginatedMatchReports" (click)="viewMatchReport(rep.id)">
+            <div class="rlc-icon"><span class="material-symbols-outlined">description</span></div>
+            <div class="rlc-details">
+              <h4>{{ rep.homeTeamName }} vs {{ rep.awayTeamName }}</h4>
+              <p>Odigrano: {{ rep.matchDate | date:'dd.MM.yyyy.' }} | Autor: <strong>{{ rep.scoutUsername }}</strong></p>
+            </div>
+            <div class="rlc-meta"><span class="badge pos-badge">{{ rep.rawRating | number:'1.1-2' }}</span></div>
+          </div>
+        </div>
+        <div class="pagination-controls" *ngIf="filteredMatchReports.length > pageSize">
+          <button class="page-btn" (click)="matchPage = matchPage - 1" [disabled]="matchPage === 1">&laquo; Prethodna</button>
+          <span>Strana {{ matchPage }} od {{ matchTotalPages }}</span>
+          <button class="page-btn" (click)="matchPage = matchPage + 1" [disabled]="matchPage === matchTotalPages">Sledeća &raquo;</button>
+        </div>
+      </div>
+
+      <!-- SEASONAL REPORTS -->
+      <div *ngIf="activeTab === 'SEASONAL'">
+        <div class="filter-row">
+          <label>Liga:</label>
+          <select [(ngModel)]="selectedLeagueId" (change)="filterSeasonalReports()" [disabled]="availableLeagues.length === 0">
+            <option *ngFor="let l of availableLeagues" [value]="l.id">{{ l.name }}</option>
+          </select>
+        </div>
+        <div class="reports-list">
+          <div *ngIf="filteredSeasonalReports.length === 0" class="empty-state">Nema sezonskih izveštaja.</div>
+          <div class="report-list-card seasonal" *ngFor="let srep of paginatedSeasonalReports" (click)="viewSeasonalReport(srep.id)">
+            <div class="rlc-icon"><span class="material-symbols-outlined">analytics</span></div>
+            <div class="rlc-details">
+              <h4>Sezona {{ srep.seasonYear }}</h4>
+              <p>Izvor: {{ srep.source === 'API_HISTORICAL' ? 'Istorijski (API)' : 'Lokalni Skauting' }}</p>
+            </div>
+            <div class="rlc-meta"><span class="badge league-badge">Pregledaj Zbir</span></div>
+          </div>
+        </div>
+        <div class="pagination-controls" *ngIf="filteredSeasonalReports.length > pageSize">
+          <button class="page-btn" (click)="seasonalPage = seasonalPage - 1" [disabled]="seasonalPage === 1">&laquo; Prethodna</button>
+          <span>Strana {{ seasonalPage }} od {{ seasonalTotalPages }}</span>
+          <button class="page-btn" (click)="seasonalPage = seasonalPage + 1" [disabled]="seasonalPage === seasonalTotalPages">Sledeća &raquo;</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

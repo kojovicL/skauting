@@ -75,7 +75,6 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/clubs").permitAll()
                 .requestMatchers("/ws-live/**").permitAll()
-
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers(
                         "/favicon.ico",

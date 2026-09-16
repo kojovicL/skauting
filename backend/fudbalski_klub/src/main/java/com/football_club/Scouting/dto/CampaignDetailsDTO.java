@@ -14,7 +14,7 @@ public class CampaignDetailsDTO {
     private Long id;
     private String name;
     private String description;
-    private Position targetPosition;
+    private String targetPosition;
     private CampaignStatus status;
     private LocalDate startDate;
     private LocalDate endDate;

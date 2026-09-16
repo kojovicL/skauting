@@ -1,20 +1,18 @@
-export interface ScoutRequestSave {
-  playerId: number;
-  instructions: string;
-  deadline: string;
-}
-
 export interface ScoutRequest {
   id: number;
-  directorId: number;
-  directorName: string;
-  scoutId: number;
-  scoutName: string;
+  campaignId: number;
+  campaignName: string;
+  monitoredPlayerId: number;
   playerId: number;
   playerName: string;
   playerSurname: string;
+  photoUrl: string;
+  position: string;
+  currentTeamName: string;
+  playerAge: number;
   requestDate: string;
-  instructions: string;
-  deadline: string;
-  status: string; // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  status: string;
+  scoutId: number;
+  scoutUsername: string;
+  region: string;
 }
