@@ -42,4 +42,8 @@ export class CampaignService {
   endCampaign(id: number): Observable<void> {
     return this.http.patch<void>(`${this.baseUrl}/${id}/end`, {});
   }
+
+  getActiveCampaignsForScoutRegion(): Observable<CampaignDetails[]> {
+    return this.http.get<CampaignDetails[]>(`${this.baseUrl}/active/my-region`);
+  }
 }

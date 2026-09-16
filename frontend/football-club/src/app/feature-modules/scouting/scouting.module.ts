@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MetricsDashboardComponent } from './components/metrics-dashboard/metrics-dashboard.component';
 import { SearchTemplateManagementComponent } from './components/search-template-management/search-template-management.component';
 import { DirectorDashboardComponent } from './components/director-dashboard/director-dashboard.component';
+import { ScoutDashboardComponent } from './components/scout-dashboard/scout-dashboard.component';
 
 
 
@@ -13,6 +14,7 @@ import { DirectorDashboardComponent } from './components/director-dashboard/dire
     MetricsDashboardComponent,
     SearchTemplateManagementComponent,
     DirectorDashboardComponent,
+    ScoutDashboardComponent,
   ],
   imports: [
     CommonModule,

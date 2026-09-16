@@ -8,6 +8,7 @@ import { RegistrationComponent } from '../auth/components/registration/registrat
 import { SearchTemplateManagementComponent } from 'src/app/feature-modules/scouting/components/search-template-management/search-template-management.component';
 import { MetricsDashboardComponent } from 'src/app/feature-modules/scouting/components/metrics-dashboard/metrics-dashboard.component';
 import { DirectorDashboardComponent } from 'src/app/feature-modules/scouting/components/director-dashboard/director-dashboard.component';
+import { ScoutDashboardComponent } from 'src/app/feature-modules/scouting/components/scout-dashboard/scout-dashboard.component';
 
 const routes: Routes = [
   { path: '',                     redirectTo: 'login', pathMatch: 'full' },
@@ -19,6 +20,7 @@ const routes: Routes = [
   // Skaut/Direktor
 
   // Skaut
+  { path: 'scout-dashboard',        component: ScoutDashboardComponent },
 
   // Direktor
   { path: 'director-dashboard',     component: DirectorDashboardComponent },
