@@ -74,7 +74,6 @@ export class ScoutManagementComponent implements OnInit {
     this.scoutManagementService.updateScoutRegion(scout.id, newRegion).subscribe({
       next: () => {
         scout.region = newRegion;
-        // Optionally show a toast success message here
       },
       error: (err) => console.error('Greška pri izmeni regiona', err)
     });

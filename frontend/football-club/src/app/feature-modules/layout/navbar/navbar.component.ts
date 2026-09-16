@@ -7,6 +7,8 @@ import { NotificationService } from 'src/app/feature-modules/scouting/services/n
 import { Notification } from 'src/app/feature-modules/scouting/models/notification.model';
 import { LeagueService } from 'src/app/feature-modules/scouting/services/league.service';
 import { League } from 'src/app/feature-modules/scouting/models/league.model';
+import { ScoutRequestService } from 'src/app/feature-modules/scouting/services/scout-request.service';
+import { ScoutRequest } from 'src/app/feature-modules/scouting/models/scout-request.model';
 
 @Component({
   selector: 'app-navbar',
@@ -28,11 +30,22 @@ export class NavbarComponent implements OnInit, OnDestroy {
   modifiedMultipliers: { [id: number]: number } = {};
   isSavingLeagues: boolean = false;
 
+  // --- Scout Requests Modal State ---
+  isRequestsModalOpen: boolean = false;
+  pendingRequests: ScoutRequest[] = [];
+  isLoadingRequests: boolean = false;
+  
+  // Confirmation Modal for Claiming Request
+  showClaimConfirmModal: boolean = false;
+  selectedRequestIdToClaim: number | null = null;
+  isClaimingRequest: boolean = false;
+
   constructor(
     private authService: AuthService,
     public router: Router,
     private notificationService: NotificationService,
     private leagueService: LeagueService,
+    private scoutRequestService: ScoutRequestService,
     private eRef: ElementRef
   ) {}
 
@@ -150,7 +163,65 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
-  // --- Postojeće metode navigacije ---
+  // --- Scout Requests Modal Logic ---
+  openRequestsModal(): void {
+    this.isRequestsModalOpen = true;
+    this.isLoadingRequests = true;
+    this.fetchPendingRequests();
+  }
+
+  closeRequestsModal(): void {
+    this.isRequestsModalOpen = false;
+    this.pendingRequests = [];
+  }
+
+  fetchPendingRequests(): void {
+    this.scoutRequestService.getPendingRequests().subscribe({
+      next: (data) => {
+        this.pendingRequests = data;
+        this.isLoadingRequests = false;
+      },
+      error: (err) => {
+        console.error('Greška pri učitavanju dostupnih zadataka', err);
+        this.isLoadingRequests = false;
+      }
+    });
+  }
+
+  openClaimConfirmModal(requestId: number, event: Event): void {
+    event.stopPropagation();
+    this.selectedRequestIdToClaim = requestId;
+    this.showClaimConfirmModal = true;
+  }
+
+  closeClaimConfirmModal(): void {
+    this.showClaimConfirmModal = false;
+    this.selectedRequestIdToClaim = null;
+  }
+
+  executeClaimRequest(): void {
+    if (!this.selectedRequestIdToClaim) return;
+    
+    this.isClaimingRequest = true;
+    this.scoutRequestService.claimRequest(this.selectedRequestIdToClaim).subscribe({
+      next: () => {
+        // Ukloni zadatak iz liste kako se više ne bi prikazivao u otvorenom modalu
+        this.pendingRequests = this.pendingRequests.filter(req => req.id !== this.selectedRequestIdToClaim);
+        this.isClaimingRequest = false;
+        this.closeClaimConfirmModal(); // Zatvara samo popup potvrde, glavni ostaje otvoren
+        
+        // Opciono: Možeš redirektovati skauta ili ponovo učitati dashboard ako je već na njemu
+        if (this.router.url === '/scouting-dashboard') {
+          // window.location.reload(); ili na neki drugi način trigeruj osvežavanje tabele
+        }
+      },
+      error: (err) => {
+        console.error('Greška pri preuzimanju zadatka', err);
+        this.isClaimingRequest = false;
+      }
+    });
+  }
+
   onReportsClick() { this.router.navigate(['/my-reports']); }
   onRequestsClick() { this.router.navigate(['/scouting-requests']); }
   onMetricsClick() { this.router.navigate(['/metrics-dashboard']); }

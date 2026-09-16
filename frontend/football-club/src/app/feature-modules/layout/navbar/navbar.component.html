@@ -5,6 +5,7 @@
   
   <div class="navbar-actions">
     <ng-container *ngIf="(isLoggedIn && userRole === 'ROLE_SCOUT')">
+      <button class="nav-btn" (click)="openRequestsModal()">Dostupni zadaci</button>
       <button class="nav-btn" (click)="onReportsClick()">Izveštaji</button>
       <button class="nav-btn" (click)="onRequestsClick()">Zahtevi</button>
       
@@ -100,6 +101,72 @@
       <button class="nav-btn" (click)="closeLeagueModal()">Odustani</button>
       <button class="nav-btn btn-save" (click)="saveLeagueMultipliers()" [disabled]="isSavingLeagues">
         {{ isSavingLeagues ? 'Čuvanje...' : 'Sačuvaj izmene' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SCOUT REQUESTS MODAL -->
+<div class="modal-overlay" *ngIf="isRequestsModalOpen">
+  <div class="modal-content requests-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Dostupni zadaci u vašem regionu</h2>
+      <button class="btn-close-icon" (click)="closeRequestsModal()"><span class="material-symbols-outlined">close</span></button>
+    </div>
+
+    <div class="modal-body">
+      <p class="modal-subtitle">Ovde se nalaze svi neraspoređeni igrači iz vašeg regiona za aktivne kampanje. Preuzmite zadatak da biste započeli praćenje i unosili izveštaje.</p>
+      
+      <div *ngIf="isLoadingRequests" class="empty-state">Učitavanje zadataka...</div>
+      <div *ngIf="!isLoadingRequests && pendingRequests.length === 0" class="empty-state">Trenutno nema dostupnih zadataka u vašem regionu.</div>
+
+      <div class="requests-list" *ngIf="!isLoadingRequests && pendingRequests.length > 0">
+        <div class="request-card" *ngFor="let req of pendingRequests">
+          
+          <div class="req-avatar">
+            <img [src]="req.photoUrl || 'assets/default-avatar.png'" alt="Slika igrača">
+          </div>
+          
+          <div class="req-info">
+            <h4>{{ req.playerName }} {{ req.playerSurname }}</h4>
+            <div class="req-team"><span class="material-symbols-outlined icon-sm">sports_soccer</span> {{ req.currentTeamName }}</div>
+            <div class="req-tags">
+              <span class="badge position-badge">{{ req.position }}</span>
+              <span class="badge date-badge">Godine: {{ req.playerAge }}</span>
+            </div>
+          </div>
+          
+          <div class="req-meta-col">
+            <div class="req-campaign"><span class="material-symbols-outlined icon-sm">campaign</span> {{ req.campaignName }}</div>
+            <div class="req-date">Dodato: {{ req.requestDate | date:'dd.MM.yyyy.' }}</div>
+            <div class="req-region">Region: {{ req.region }}</div>
+            
+            <button class="btn-primary nav-btn" (click)="openClaimConfirmModal(req.id, $event)">Preuzmi zadatak</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="nav-btn" (click)="closeRequestsModal()">Zatvori</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLAIM CONFIRMATION MODAL -->
+<div class="modal-overlay" *ngIf="showClaimConfirmModal" style="z-index: 2001;">
+  <div class="modal-content confirm-modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Potvrda preuzimanja</h2>
+    </div>
+    <div class="confirm-body" style="padding: 1.5rem; text-align: center;">
+      <p style="color: #2c3e50; line-height: 1.5; margin-bottom: 1rem;">Da li ste sigurni da želite da preuzmete ovaj zadatak? Nakon preuzimanja, igrač će se trajno pojaviti na vašoj kontrolnoj tabli i preuzećete odgovornost za njegov skauting u ovoj kampanji.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary nav-btn" (click)="closeClaimConfirmModal()">Odustani</button>
+      <button class="btn-primary btn-save" (click)="executeClaimRequest()" [disabled]="isClaimingRequest">
+        {{ isClaimingRequest ? 'Preuzimanje...' : 'Potvrdi' }}
       </button>
     </div>
   </div>

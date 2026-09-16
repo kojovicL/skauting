@@ -33,6 +33,22 @@
   transition: background-color 0.2s ease;
 }
 
+.btn-save {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333333;
+  background-color: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-save:hover {
+  background-color: #e2e8f0;
+}
+
 .nav-btn:hover {
   background-color: #e2e8f0;
 }
@@ -238,15 +254,29 @@
   z-index: 2000; /* Preko svega */
 }
 
-.modal-content.league-modal {
+.modal-content {
   background: #ffffff;
   width: 100%;
-  max-width: 550px;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Specifična širina za modal za ligu */
+.league-modal {
+  max-width: 550px;
+}
+
+/* Specifična širina za modal za potvrdu preuzimanja */
+.confirm-modal {
+  max-width: 450px;
+}
+
+/* Specifična širina za modal sa zadacima */
+.requests-modal {
+  max-width: 800px;
 }
 
 .modal-header {
@@ -391,3 +421,121 @@
   background-color: #95a5a6;
   cursor: not-allowed;
 }
+
+.requests-modal {
+  max-width: 800px; /* Širi modal da stane više informacija vodoravno */
+}
+
+.requests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.request-card {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 1.2rem;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.request-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-color: #3498db;
+}
+
+.req-avatar {
+  width: 65px;
+  height: 65px;
+  flex-shrink: 0;
+  margin-right: 1.5rem;
+}
+
+.req-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #e9ecef;
+}
+
+.req-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.req-info h4 {
+  margin: 0 0 0.4rem 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.req-team {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.icon-sm {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.req-tags {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.req-meta-col {
+  text-align: right;
+  border-left: 1px solid #e9ecef;
+  padding-left: 1.5rem;
+  margin-left: 1rem;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.req-campaign {
+  font-weight: 600;
+  color: #2980b9;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.req-date, .req-region {
+  font-size: 0.8rem;
+  color: #95a5a6;
+  margin-bottom: 0.2rem;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.mt-2 {
+  margin-top: 0.8rem;
+}
+
+.badge {
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.position-badge { background: #e3f2fd; color: #1976d2; }
+.date-badge { background: #fdf2f2; color: #e74c3c; }

@@ -38,9 +38,8 @@ export class ScoutManagementService {
   }
 
   updateScoutRegion(scoutId: number, region: string): Observable<string> {
-    // Calling the endpoint in AuthController
     let params = new HttpParams().set('region', region);
-    return this.http.patch(`${environment.apiHost}auth/scouts/${scoutId}/region`, null, { 
+    return this.http.patch(`${this.baseUrl}/scouts/${scoutId}/region`, null, { 
       params: params,
       responseType: 'text' 
     });
