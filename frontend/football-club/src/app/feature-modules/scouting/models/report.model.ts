@@ -41,7 +41,20 @@ export interface ReportDraftData {
   match: MatchDraftInfo;
   player: PlayerDraftInfo;
   apiStat: ApiMatchStatSummary;
-  allSystemMetrics: any[]; // Maps to Metric
+  allSystemMetrics: SystemMetricDTO[];
+}
+
+export interface MetricFormItem {
+  metricId: number;
+  metricName: string;
+  value: number;
+  type: string;
+  isApi: boolean;
+}
+
+export interface MetricCategoryGroup {
+  categoryName: string;
+  metrics: MetricFormItem[];
 }
 
 export interface ValuedMetric {
@@ -56,6 +69,13 @@ export interface ValuedMetric {
 export interface ValuedMetricSave {
   metricId: number;
   value: number;
+}
+
+export interface SystemMetricDTO {
+  id: number;
+  name: string;
+  category: string;
+  type: string;
 }
 
 export interface Report {

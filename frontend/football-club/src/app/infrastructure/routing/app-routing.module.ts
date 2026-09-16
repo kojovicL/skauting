@@ -10,6 +10,7 @@ import { MetricsDashboardComponent } from 'src/app/feature-modules/scouting/comp
 import { DirectorDashboardComponent } from 'src/app/feature-modules/scouting/components/director-dashboard/director-dashboard.component';
 import { ScoutDashboardComponent } from 'src/app/feature-modules/scouting/components/scout-dashboard/scout-dashboard.component';
 import { ScoutManagementComponent } from 'src/app/feature-modules/scouting/components/scout-management/scout-management.component';
+import { ReportCreateComponent } from 'src/app/feature-modules/scouting/components/report-create/report-create.component';
 
 const routes: Routes = [
   { path: '',                     redirectTo: 'login', pathMatch: 'full' },
@@ -22,6 +23,7 @@ const routes: Routes = [
 
   // Skaut
   { path: 'scout-dashboard',        component: ScoutDashboardComponent },
+  { path: 'reports/create', component: ReportCreateComponent },
 
   // Direktor
   { path: 'director-dashboard',     component: DirectorDashboardComponent },

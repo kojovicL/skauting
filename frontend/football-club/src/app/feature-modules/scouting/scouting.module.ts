@@ -7,6 +7,7 @@ import { SearchTemplateManagementComponent } from './components/search-template-
 import { DirectorDashboardComponent } from './components/director-dashboard/director-dashboard.component';
 import { ScoutDashboardComponent } from './components/scout-dashboard/scout-dashboard.component';
 import { ScoutManagementComponent } from './components/scout-management/scout-management.component';
+import { ReportCreateComponent } from './components/report-create/report-create.component';
 
 
 
@@ -17,6 +18,7 @@ import { ScoutManagementComponent } from './components/scout-management/scout-ma
     DirectorDashboardComponent,
     ScoutDashboardComponent,
     ScoutManagementComponent,
+    ReportCreateComponent,
   ],
   imports: [
     CommonModule,
