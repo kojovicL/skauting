@@ -120,7 +120,7 @@ export class ReportCreateComponent implements OnInit {
     this.reportService.createReport(reportToSave).subscribe({
       next: () => {
         this.isSaving = false;
-        this.router.navigate(['/scouting-dashboard']);
+        this.router.navigate(['/scout-dashboard']);
       },
       error: (err) => {
         console.error('Greška pri čuvanju izveštaja', err);

@@ -66,4 +66,8 @@ export class ReportService {
   getUpcomingTasks(): Observable<UpcomingMatchTask[]> {
     return this.http.get<UpcomingMatchTask[]>(`${this.baseUrl}/upcoming-tasks`);
   }
+
+  getMyScoutedPlayers(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/my/players`);
+  }
 }

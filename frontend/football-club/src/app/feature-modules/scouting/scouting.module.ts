@@ -8,6 +8,7 @@ import { DirectorDashboardComponent } from './components/director-dashboard/dire
 import { ScoutDashboardComponent } from './components/scout-dashboard/scout-dashboard.component';
 import { ScoutManagementComponent } from './components/scout-management/scout-management.component';
 import { ReportCreateComponent } from './components/report-create/report-create.component';
+import { MyReportsComponent } from './components/my-reports/my-reports.component';
 
 
 
@@ -19,6 +20,7 @@ import { ReportCreateComponent } from './components/report-create/report-create.
     ScoutDashboardComponent,
     ScoutManagementComponent,
     ReportCreateComponent,
+    MyReportsComponent,
   ],
   imports: [
     CommonModule,

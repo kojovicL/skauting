@@ -1,0 +1,140 @@
+<div class="dashboard-container">
+  
+  <!-- PENDING TASKS -->
+  <div class="section-header">
+    <h1 class="dashboard-title">Zadaci na čekanju</h1>
+  </div>
+  
+  <div class="tasks-grid">
+    <div *ngIf="pendingTasks.length === 0" class="no-data-msg">
+      Trenutno nemate nezavršenih izveštaja o mečevima.
+    </div>
+
+    <div class="task-card pending-card" *ngFor="let task of paginatedPendingTasks">
+      <div class="task-match-header">
+        <div class="match-league">{{ task.leagueName }}</div>
+        <div class="match-date">{{ task.matchDate | date:'dd.MM.yyyy. HH:mm' }}</div>
+      </div>
+      
+      <div class="match-teams">
+        <div class="team">
+          <img [src]="task.homeTeamLogo" alt="Home">
+          <span>{{ task.homeTeamName }}</span>
+        </div>
+        <div class="score-pill">{{ task.homeGoals }} : {{ task.awayGoals }}</div>
+        <div class="team">
+          <img [src]="task.awayTeamLogo" alt="Away">
+          <span>{{ task.awayTeamName }}</span>
+        </div>
+      </div>
+
+      <div class="task-player-section">
+        <img [src]="task.playerPhotoUrl || 'assets/default-avatar.png'" alt="Slika">
+        <div class="task-player-details">
+          <span class="tp-name">{{ task.playerName }} {{ task.playerSurname }}</span>
+          <span class="tp-stat">Odigrao: {{ task.minutesPlayed }} min</span>
+        </div>
+        <button class="btn-primary-small" [routerLink]="['/reports/create']" [queryParams]="{playerId: task.playerId, matchId: task.matchId}">
+          Napiši izveštaj
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagination-controls" *ngIf="pendingTasks.length > taskPageSize" style="margin-top: 1rem; margin-bottom: 3rem;">
+    <button class="page-btn" (click)="prevTaskPage()" [disabled]="taskPage === 1">&laquo; Prethodna</button>
+    <span class="page-info">Stranica {{ taskPage }} od {{ taskTotalPages }}</span>
+    <button class="page-btn" (click)="nextTaskPage()" [disabled]="taskPage === taskTotalPages">Sledeća &raquo;</button>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- MY REPORTS SECTION -->
+  <div class="section-header">
+    <h1 class="dashboard-title">Arhiva izveštaja</h1>
+  </div>
+
+  <div *ngIf="scoutedPlayers.length === 0" class="no-data-msg">
+    Još uvek niste napravili nijedan izveštaj.
+  </div>
+
+  <div class="reports-layout" *ngIf="scoutedPlayers.length > 0">
+    
+    <!-- Player Selector Sidebar/Top -->
+    <div class="player-selector-box">
+      <label>Izaberite igrača:</label>
+      <select [ngModel]="selectedPlayerId" (ngModelChange)="onPlayerSelect($event)">
+        <option *ngFor="let p of scoutedPlayers" [value]="p.id">{{ p.name }} {{ p.surname }}</option>
+      </select>
+      
+      <div class="selected-player-card" *ngIf="selectedPlayerDetails">
+        <img [src]="selectedPlayerDetails.photoUrl || 'assets/default-avatar.png'">
+        <div class="sp-info">
+          <h3>{{ selectedPlayerDetails.name }} {{ selectedPlayerDetails.surname }}</h3>
+          <p>{{ selectedPlayerDetails.position }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports Content Area -->
+    <div class="reports-content-box">
+      <div class="tab-container">
+        <button class="tab-btn" [class.active]="activeTab === 'MATCH'" (click)="switchTab('MATCH')">Meč Izveštaji</button>
+        <button class="tab-btn" [class.active]="activeTab === 'SEASONAL'" (click)="switchTab('SEASONAL')">Sezonski Izveštaji</button>
+      </div>
+
+      <!-- MATCH TAB -->
+      <div *ngIf="activeTab === 'MATCH'">
+        <div class="filter-row">
+          <label>Sezona:</label>
+          <select [(ngModel)]="selectedSeason" (change)="onSeasonChange()" [disabled]="availableSeasons.length === 0">
+            <option *ngFor="let year of availableSeasons" [value]="year">{{ year }} / {{ year + 1 }}</option>
+            <option *ngIf="availableSeasons.length === 0" disabled>Nema podataka</option>
+          </select>
+        </div>
+
+        <div class="reports-list">
+          <div *ngIf="filteredMatchReports.length === 0" class="no-data-msg">Nema meč izveštaja za izabranu sezonu.</div>
+          
+          <div class="report-list-card" *ngFor="let rep of filteredMatchReports" (click)="viewMatchReport(rep.id)">
+            <div class="rlc-icon"><span class="material-symbols-outlined">description</span></div>
+            <div class="rlc-details">
+              <h4>{{ rep.homeTeamName }} vs {{ rep.awayTeamName }}</h4>
+              <p>Odigrano: {{ rep.matchDate | date:'dd.MM.yyyy.' }}</p>
+            </div>
+            <div class="rlc-meta">
+              <span>Kreirano: {{ rep.createdAt | date:'dd.MM.yyyy.' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEASONAL TAB -->
+      <div *ngIf="activeTab === 'SEASONAL'">
+        <div class="filter-row">
+          <label>Liga:</label>
+          <select [(ngModel)]="selectedLeagueId" (change)="onLeagueChange()" [disabled]="availableLeagues.length === 0">
+            <option *ngFor="let l of availableLeagues" [value]="l.id">{{ l.name }}</option>
+            <option *ngIf="availableLeagues.length === 0" disabled>Nema podataka</option>
+          </select>
+        </div>
+
+        <div class="reports-list">
+          <div *ngIf="filteredSeasonalReports.length === 0" class="no-data-msg">Nema sezonskih izveštaja za izabranu ligu.</div>
+          
+          <div class="report-list-card seasonal" *ngFor="let srep of filteredSeasonalReports" (click)="viewSeasonalReport(srep.id)">
+            <div class="rlc-icon"><span class="material-symbols-outlined">analytics</span></div>
+            <div class="rlc-details">
+              <h4>Sezona {{ srep.seasonYear }} / {{ srep.seasonYear + 1 }}</h4>
+              <p>Izvor: {{ translateSource(srep.source) }}</p>
+            </div>
+            <div class="rlc-meta">
+              <span class="badge position-badge">Pregledaj Zbir</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

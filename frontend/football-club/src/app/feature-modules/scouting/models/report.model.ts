@@ -100,6 +100,9 @@ export interface Report {
   goals: number;
   assists: number;
   rawRating: number;
+  playerPhotoUrl?: string;
+  seasonYear?: number;
+  matchDate?: string;
   weightedRating: number;
   valuedMetrics: ValuedMetric[];
 }

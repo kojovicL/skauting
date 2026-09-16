@@ -11,6 +11,7 @@ import { DirectorDashboardComponent } from 'src/app/feature-modules/scouting/com
 import { ScoutDashboardComponent } from 'src/app/feature-modules/scouting/components/scout-dashboard/scout-dashboard.component';
 import { ScoutManagementComponent } from 'src/app/feature-modules/scouting/components/scout-management/scout-management.component';
 import { ReportCreateComponent } from 'src/app/feature-modules/scouting/components/report-create/report-create.component';
+import { MyReportsComponent } from 'src/app/feature-modules/scouting/components/my-reports/my-reports.component';
 
 const routes: Routes = [
   { path: '',                     redirectTo: 'login', pathMatch: 'full' },
@@ -24,6 +25,7 @@ const routes: Routes = [
   // Skaut
   { path: 'scout-dashboard',        component: ScoutDashboardComponent },
   { path: 'reports/create', component: ReportCreateComponent },
+  { path: 'my-reports', component: MyReportsComponent },
 
   // Direktor
   { path: 'director-dashboard',     component: DirectorDashboardComponent },
