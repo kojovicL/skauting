@@ -42,4 +42,5 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
         WHERE m.season.id = :seasonId
     """)
     List<Report> findReportsBySeasonId(@Param("seasonId") Long seasonId);
+    long countByScoutId(Long scoutId);
 }
